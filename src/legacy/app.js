@@ -5054,11 +5054,35 @@ function renderATP250(sub){
 // ═══════════════════════════════════════
 //  ANOTADORES · datos (usado en Extras, ranking completo)
 // ═══════════════════════════════════════
+function anoSourceLabel(key){
+  if(key.indexOf('T:')===0){
+    var id=key.slice(2), T=window.__TDB;
+    var t=(T && T.tournaments||[]).filter(function(x){ return x.id===id; })[0];
+    return t ? (t.name||'Torneo') : 'Torneo';
+  }
+  if(key.indexOf('C:')===0){
+    var k=key.slice(2);
+    return ({usopen:'US Open', liga:'Liga', montreal:'Montreal', cincinnati:'Cincinnati',
+             washington:'Washington', acapulco:'Acapulco', winstonsalem:'Winston-Salem',
+             loscabos:'Los Cabos'})[k] || k;
+  }
+  return key;
+}
+/* Suma global de anotadores: cada torneo cuenta UNA sola vez.
+   __anoDetail guarda el desglose por torneo para poder mostrarlo en Extras. */
 function anoTotals(){
-  var out={};
-  function add(pid,n){ pid=parseInt(pid,10); if(!pid||!n) return; out[pid]=(out[pid]||0)+n; }
-  function addObj(o){
-    if(!o) return;
+  var out={}, detail={}, seen=[], CUR='Otros';
+  function add(pid,n){
+    pid=parseInt(pid,10); if(!pid||!n) return;
+    out[pid]=(out[pid]||0)+n;
+    if(!detail[pid]) detail[pid]={};
+    detail[pid][CUR]=(detail[pid][CUR]||0)+n;
+  }
+  function addObj(o,label){
+    if(!o || typeof o!=='object') return;
+    if(seen.indexOf(o)!==-1) return;   // evita contar dos veces el mismo origen
+    seen.push(o);
+    CUR=label||'Otros';
     Object.keys(o).forEach(function(k){
       var pid=parseInt(k,10);
       if(!pid || isNaN(pid)){
@@ -5069,25 +5093,35 @@ function anoTotals(){
       add(pid, o[k]);
     });
   }
-  addObj(COMP.liga && COMP.liga.ano);
-  addObj(COMP.usopen && COMP.usopen.ano);
+  addObj(COMP.liga && COMP.liga.ano, 'Liga');
+  addObj(COMP.usopen && COMP.usopen.ano, 'US Open');
   Object.keys(COMP).forEach(function(g){
     var grp=COMP[g];
     if(!grp || typeof grp!=='object' || Array.isArray(grp)) return;
-    if(grp.ano && g!=='liga' && g!=='usopen') addObj(grp.ano);
+    if(grp.ano && g!=='liga' && g!=='usopen') addObj(grp.ano, anoSourceLabel('C:'+g));
     Object.keys(grp).forEach(function(k){
       var d=grp[k];
-      if(d && typeof d==='object' && d.ano) addObj(d.ano);
+      if(d && typeof d==='object' && d.ano) addObj(d.ano, anoSourceLabel('C:'+k));
     });
   });
   var T=window.__TDB, merged=window.__anoMerged||{};
   if(T && T.anoAdd) Object.keys(T.anoAdd).forEach(function(key){
-    if(key.indexOf('T:')===0 || !merged[key]) addObj(T.anoAdd[key]);
+    if(key.indexOf('T:')===0 || !merged[key]) addObj(T.anoAdd[key], anoSourceLabel(key));
   });
-  addObj(COMP.generalAno);
+  addObj(COMP.generalAno, 'Ajustes y aces');
+  window.__anoDetail = detail;
   return out;
 }
 window.anoTotals = anoTotals;
+
+function anoBreakdown(pid){
+  var d=(window.__anoDetail||{})[pid];
+  if(!d) return '';
+  return Object.keys(d).filter(function(k){ return d[k]; })
+    .sort(function(a,b){ return d[b]-d[a]; })
+    .map(function(k){ return k+' '+d[k]; }).join(' · ');
+}
+window.anoBreakdown = anoBreakdown;
 
 function allAnotadoresRows(){
   var tot=anoTotals();
