@@ -14,13 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_admin: {
+        Row: {
+          id: number
+          pin_hash: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          pin_hash: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          pin_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_audit: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      app_state: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      app_admin_set_pin: {
+        Args: { p_new: string; p_old: string }
+        Returns: boolean
+      }
+      app_admin_verify: { Args: { p_pin: string }; Returns: boolean }
+      app_audit_list: {
+        Args: { p_limit?: number; p_pin: string }
+        Returns: {
+          action: string
+          created_at: string
+        }[]
+      }
+      app_state_set: {
+        Args: { p_action?: string; p_payload: Json; p_pin: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
