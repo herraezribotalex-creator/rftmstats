@@ -5267,7 +5267,7 @@ function careerTitlesRows(){
     .map(function(x){ return {pid:x.pid,name:x.name,v:x.c.titles,vLabel:x.c.titles,sub:x.c.played+' finales · '+x.c.runnerup+' subcamp.'}; });
 }
 function anotadoresRows(){
-  return allAnotadoresRows().map(function(x){ return {pid:x.pid,name:x.k,v:x.wins,vLabel:x.wins,sub:x.wins?'Puntos de anotador':'Sin puntos'}; });
+  return allAnotadoresRows().map(function(x){ return {pid:x.pid,name:x.k,v:x.wins,vLabel:x.wins,sub:x.wins?(anoBreakdown(x.pid)||'Puntos de anotador'):'Sin puntos'}; });
 }
 function doublesEffRows(){
   return PLAYERS.map(function(p){
@@ -5396,7 +5396,7 @@ function renderExtras(){
   html+=viewAllFooter()+'</div>';
 
   html+='<div class="insight-card clickable c-chartreuse" data-topic="anotadores"><div class="insight-title"><span class="dot"></span>5 · Anotadores globales</div>';
-  scorerTotals().forEach(function(x,i){ html+=insightRow(i+1,x.p.name,'Liga + torneos cargados',x.pts,x.p.id); });
+  scorerTotals().forEach(function(x,i){ html+=insightRow(i+1,x.p.name,(anoBreakdown(x.p.id)||'Suma de todos los torneos'),x.pts,x.p.id); });
   html+=viewAllFooter()+'</div>';
 
   html+='<div class="insight-card clickable c-blue" data-topic="dobles"><div class="insight-title"><span class="dot"></span>6 · Eficiencia en dobles</div>';
