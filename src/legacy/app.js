@@ -4751,7 +4751,8 @@ function finalResult(compEntry){
   return {campeon:campeon, subcampeon:subcampeon};
 }
 function ligaResult(){
-  var jornadas = COMP.liga.jornadas;
+  var jornadas = (COMP.liga && COMP.liga.jornadas) || [];
+  if(!jornadas.length) return {campeon:null, subcampeon:null};
   var decisiva = jornadas[jornadas.length-1];
   var m = decisiva && decisiva.matches[0];
   if(!m || !m.w) return {campeon:null, subcampeon:null};
@@ -4974,7 +4975,7 @@ function renderLiga(){
   h+='<div>';
   h+='<div class="section-title">Calendario</div>';
   h+='<div class="liga-cal-grid">';
-  COMP.liga.jornadas.forEach(function(jor){
+  ((COMP.liga && COMP.liga.jornadas) || []).forEach(function(jor){
     h+='<div class="liga-jornada">';
     h+='<div class="liga-jornada-title">Jornada '+jor.n+'</div>';
     jor.matches.forEach(function(m){
