@@ -32,6 +32,7 @@ export const Route = createFileRoute("/")({
 
 function LigaApp() {
   const hostRef = useRef<HTMLDivElement>(null);
+  const reloadTimer = useRef<number | undefined>(undefined);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
@@ -77,8 +78,6 @@ function LigaApp() {
       void supabase.removeChannel(channel);
     };
   }, []);
-
-  const reloadTimer = useRef<number | undefined>(undefined);
 
   return (
     <>
