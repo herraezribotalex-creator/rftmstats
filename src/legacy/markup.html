@@ -1,0 +1,154 @@
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-crest"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 3h-2V2H8v1H6a2 2 0 0 0-2 2v2a4 4 0 0 0 4 4 5.99 5.99 0 0 0 3 4.584V18H9a2 2 0 0 0-2 2v1h10v-1a2 2 0 0 0-2-2h-2v-2.416A5.99 5.99 0 0 0 16 11a4 4 0 0 0 4-4V5a2 2 0 0 0-2-2zM6 9a2 2 0 0 1-2-2V5h2zm14-2a2 2 0 0 1-2 2V5h2z"/></svg></span>
+    <div>
+      <div class="brand-name">R<span>FTM</span></div>
+      <div class="brand-sub">Liga H2H · Estadísticas</div>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="jugador">Jugador</button>
+    <button class="tab" data-tab="h2h">H2H</button>
+    <button class="tab" data-tab="ranking">Ranking</button>
+    <button class="tab" data-tab="comparar">Comparar</button>
+    <button class="tab" data-tab="competiciones">Comp.</button>
+    <button class="tab" data-tab="campeones">Campeones</button>
+    <button class="tab" data-tab="cartas">Cartas</button>
+    <button class="tab" data-tab="extras">Extras</button>
+    <button class="tab" data-tab="adivina">Adivina</button>
+  </nav>
+</header>
+
+<div class="ticker" id="ticker"></div>
+
+<main>
+
+
+  <section id="view-jugador" class="view active">
+    <div class="search-block">
+      <label>Buscar jugador</label>
+      <input id="player-search" class="search-input" type="text" placeholder="Escribe un nombre… (ej. Gabi)" autocomplete="off">
+      <div id="player-suggestions" class="suggestions"></div>
+    </div>
+    <div id="player-empty" class="empty-state">
+      <span class="big">Elige un jugador</span>
+      Busca un nombre arriba para ver su ficha completa
+    </div>
+    <div id="player-profile" class="profile" hidden></div>
+  </section>
+
+  <section id="view-h2h" class="view">
+    <div class="h2h-search-row">
+      <div class="search-block">
+        <label>Jugador A</label>
+        <input id="h2h-a-input" class="search-input" type="text" placeholder="Nombre del jugador A" autocomplete="off">
+        <div id="h2h-a-suggestions" class="suggestions"></div>
+      </div>
+      <div class="vs-badge" id="vs-badge"><span>VS</span></div>
+      <div class="search-block">
+        <label>Jugador B</label>
+        <input id="h2h-b-input" class="search-input" type="text" placeholder="Nombre del jugador B" autocomplete="off">
+        <div id="h2h-b-suggestions" class="suggestions"></div>
+      </div>
+    </div>
+    <div id="h2h-empty" class="empty-state">
+      <span class="big">Elige dos jugadores</span>
+      Busca a Jugador A y Jugador B para ver su cara a cara
+    </div>
+    <div id="h2h-result" class="h2h-result" hidden></div>
+  </section>
+  <section id="view-ranking" class="view">
+    <div class="sub-tabs">
+      <button class="sub-tab active" data-subtab="general">Ranking General</button>
+      <button class="sub-tab" data-subtab="unica">Temporada Única</button>
+    </div>
+    <div id="ranking-general" class="sub-view"></div>
+    <div id="ranking-unica" class="sub-view" hidden></div>
+  </section>
+
+  <section id="view-comparar" class="view">
+    <div class="h2h-search-row">
+      <div class="search-block">
+        <label>Jugador A</label>
+        <input id="cmp-a-input" class="search-input" type="text" placeholder="Jugador A" autocomplete="off">
+        <div id="cmp-a-suggestions" class="suggestions"></div>
+      </div>
+      <div class="vs-badge"><span>VS</span></div>
+      <div class="search-block">
+        <label>Jugador B</label>
+        <input id="cmp-b-input" class="search-input" type="text" placeholder="Jugador B" autocomplete="off">
+        <div id="cmp-b-suggestions" class="suggestions"></div>
+      </div>
+    </div>
+    <div id="cmp-empty" class="empty-state">
+      <span class="big">Elige dos jugadores</span>
+      Selecciona ambos para comparar sus estadísticas
+    </div>
+    <div id="cmp-result" hidden></div>
+  </section>
+
+
+  <section id="view-competiciones" class="view">
+    <div class="comp-tabs">
+      <button class="comp-tab active" data-comp="liga">Liga</button>
+      <button class="comp-tab" data-comp="usopen">US Open</button>
+      <button class="comp-tab" data-comp="m1000">M1000</button>
+      <button class="comp-tab" data-comp="atp500">ATP 500</button>
+      <button class="comp-tab" data-comp="atp250">ATP 250</button>
+    </div>
+    <div id="comp-liga"      class="comp-view active"></div>
+    <div id="comp-usopen"    class="comp-view" hidden></div>
+    <div id="comp-m1000"     class="comp-view" hidden>
+      <div class="sub-tabs sub-tabs-sm">
+        <button class="sub-tab-sm active" data-sm1000="montreal">Montreal</button>
+        <button class="sub-tab-sm"        data-sm1000="cincinnati">Cincinnati</button>
+      </div>
+      <div id="sm1000-montreal"    class="comp-sv"></div>
+      <div id="sm1000-cincinnati"  class="comp-sv" hidden></div>
+    </div>
+    <div id="comp-atp500" class="comp-view" hidden>
+      <div class="sub-tabs sub-tabs-sm">
+        <button class="sub-tab-sm active" data-s500="washington">Washington</button>
+        <button class="sub-tab-sm"        data-s500="acapulco">Acapulco</button>
+      </div>
+      <div id="s500-washington" class="comp-sv"></div>
+      <div id="s500-acapulco"   class="comp-sv" hidden></div>
+    </div>
+    <div id="comp-atp250" class="comp-view" hidden>
+      <div class="sub-tabs sub-tabs-sm">
+        <button class="sub-tab-sm active" data-s250="winstonsalem">Winston-Salem</button>
+        <button class="sub-tab-sm"        data-s250="loscabos">Los Cabos</button>
+      </div>
+      <div id="s250-winstonsalem" class="comp-sv"></div>
+      <div id="s250-loscabos"     class="comp-sv" hidden></div>
+    </div>
+  </section>
+
+
+  <section id="view-campeones" class="view">
+    <div class="extras-hero"><div class="extras-hero-title">Campeones RFTM</div><div class="extras-hero-sub">Campeón y finalista de cada torneo disputado esta temporada</div></div>
+    <div id="campeones-panel"></div>
+  </section>
+
+  <section id="view-cartas" class="view">
+    <div class="search-block" style="margin-bottom:28px;">
+      <label>Buscar jugador</label>
+      <input id="carta-search" class="search-input" type="text" placeholder="Escribe un nombre…" autocomplete="off">
+      <div id="carta-suggestions" class="suggestions"></div>
+    </div>
+    <div id="cartas-grid" class="cartas-grid"></div>
+    <div id="cartas-empty" class="empty-state" hidden></div>
+  </section>
+
+
+  <section id="view-extras" class="view">
+    <div id="extras-panel"></div>
+  </section>
+
+  <section id="view-adivina" class="view"></section>
+</main>
+
+<footer>
+  Datos privados de la liga RFTM · <b>20 jugadores</b> · pídele a Claude que añada resultados o títulos nuevos para mantenerlo al día
+</footer>
