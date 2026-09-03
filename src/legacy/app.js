@@ -717,9 +717,9 @@
       SINGLES.push(rec);
       var keys=['SINGLES'];
       if(m.box.querySelector('#lv-ano').checked && (aces.a||aces.b)){
-        COMP.generalAno=COMP.generalAno||{};
-        COMP.generalAno[a.id]=(COMP.generalAno[a.id]||0)+aces.a;
-        COMP.generalAno[b.id]=(COMP.generalAno[b.id]||0)+aces.b;
+        COMP.acesAno=COMP.acesAno||{};
+        COMP.acesAno[a.id]=(COMP.acesAno[a.id]||0)+aces.a;
+        COMP.acesAno[b.id]=(COMP.acesAno[b.id]||0)+aces.b;
         keys.push('COMP');
       }
       m.close();
