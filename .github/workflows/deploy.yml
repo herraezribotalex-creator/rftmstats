@@ -26,9 +26,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
+        
       - name: Build
-        run: npm run build -- --base=/rftmstats/
+        run: npm run build
+        env:
+          VITE_BASE: /rftmstats/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
