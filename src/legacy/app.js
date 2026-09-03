@@ -500,7 +500,7 @@
     var g=COMP.generalAno||(COMP.generalAno={});
     var tot=(typeof window.anoTotals==='function')?window.anoTotals():{};
     var h='<div class="adm-card"><div class="adm-h">Anotadores globales — sumar y quitar puntos</div>'+
-      '<div class="adm-note">Lo que ajustes aquí se suma o se resta directamente en <b>Extras · 5 · Anotadores globales</b>. Recuerda que cada <b>ace</b> o winner del marcador en vivo ya cuenta como punto de anotador por su cuenta.</div>'+
+      '<div class="adm-note">Lo que ajustes aquí se suma o se resta directamente en <b>Extras · 5 · Anotadores globales</b>. Los <b>aces</b> del marcador en vivo se guardan aparte (cada ace es un punto de anotador, pero un punto de anotador no es un ace).</div>'+
       '<div class="adm-scroll" style="margin-top:10px;"><table class="adm-tbl"><thead><tr><th>Jugador</th><th>Ajuste manual</th><th>Total global</th></tr></thead><tbody>';
     PLAYERS.forEach(function(p){
       h+='<tr data-apid="'+p.id+'"><td>'+esc(p.name)+'</td>'+
