@@ -5109,7 +5109,8 @@ function anoTotals(){
   if(T && T.anoAdd) Object.keys(T.anoAdd).forEach(function(key){
     if(key.indexOf('T:')===0 || !merged[key]) addObj(T.anoAdd[key], anoSourceLabel(key));
   });
-  addObj(COMP.generalAno, 'Ajustes y aces');
+  addObj(COMP.acesAno, 'Aces');
+  addObj(COMP.generalAno, 'Ajustes manuales');
   window.__anoDetail = detail;
   return out;
 }
