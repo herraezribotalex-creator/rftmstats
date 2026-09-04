@@ -6782,3 +6782,27 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
   };
   try{ renderCampeonesExtra(); }catch(e){}
 })();
+
+/* Campeones · tarjetas clásicas: sin huecos de foto vacíos y sin torneos sin jugar */
+(function(){
+  var origPos = champPos;
+  champPos = function(ids, badgeCls, badgeLabel, posCls){
+    var arr = ids ? (Array.isArray(ids)?ids.filter(Boolean):[ids]) : [];
+    if(!arr.length){
+      return '<div class="champ-pos '+posCls+'"><span class="champ-badge '+badgeCls+'">'+badgeLabel+'</span>'+
+             '<div class="champ-pos-name empty" style="margin-top:8px;">Por disputar</div></div>';
+    }
+    return origPos(arr, badgeCls, badgeLabel, posCls);
+  };
+  renderCampeonesPanel = function(){
+    var list=(CAMPEONES.list||[]).filter(function(t){
+      var d=CAMPEONES.data[t.key]||{};
+      var c=d.campeon, s=d.subcampeon;
+      var has=function(x){ return Array.isArray(x)?x.filter(Boolean).length:!!x; };
+      return has(c)||has(s);
+    });
+    var html='<div class="champ-grid">'+list.map(champCard).join('')+'</div>';
+    var host=document.getElementById('campeones-panel');
+    if(host){ host.innerHTML=html; try{ renderCampeonesExtra(); }catch(e){} }
+  };
+})();
