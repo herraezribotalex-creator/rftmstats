@@ -5620,8 +5620,9 @@ function champPos(ids, badgeCls, badgeLabel, posCls){
   var html = '<div class="champ-pos '+posCls+'">';
   html += '<span class="champ-badge '+badgeCls+'">'+badgeLabel+'</span>';
   if(ids){
-    var arr = Array.isArray(ids) ? ids : [ids];
-    var players = arr.map(playerById);
+    var arr = (Array.isArray(ids) ? ids : [ids]).filter(Boolean);
+    var players = arr.map(playerById).filter(Boolean);
+    if(!players.length){ return '<div class="champ-pos '+posCls+'"><span class="champ-badge '+badgeCls+'">'+badgeLabel+'</span><div class="champ-pos-name empty" style="margin-top:8px;">Por disputar</div></div>'; }
     html += '<div style="display:flex;justify-content:center;">'+players.map(function(p,i){
       var ph = (typeof PHOTOS!=='undefined'&&PHOTOS[p.id]) ? '<img src="'+PHOTOS[p.id]+'" alt="'+p.name+'">' : '<div class="av-initials">'+p.name.slice(0,2).toUpperCase()+'</div>';
       return '<div class="champ-pos-avatar"'+(i>0?' style="margin-left:-14px;"':'')+'>'+ph+'</div>';
@@ -5629,8 +5630,7 @@ function champPos(ids, badgeCls, badgeLabel, posCls){
     html += '<div class="champ-pos-name">'+players.map(function(p){ return p.name; }).join(' / ')+'</div>';
     html += '<div style="margin-top:2px;display:flex;gap:4px;justify-content:center;">'+players.map(function(p){ return flagImg(p,'flag-sm'); }).join('')+'</div>';
   } else {
-    html += '<div class="champ-pos-avatar"><div class="av-initials">?</div></div>';
-    html += '<div class="champ-pos-name empty">Por disputar</div>';
+    html += '<div class="champ-pos-name empty" style="margin-top:8px;">Por disputar</div>';
   }
   html += '</div>';
   return html;
@@ -5646,10 +5646,16 @@ function champCard(t){
   return html;
 }
 function renderCampeonesPanel(){
+  function has(x){ return Array.isArray(x) ? x.filter(Boolean).length>0 : !!x; }
+  var list = (CAMPEONES.list||[]).filter(function(t){
+    var d = CAMPEONES.data[t.key] || {};
+    return has(d.campeon) || has(d.subcampeon);
+  });
   var html = '<div class="champ-grid">';
-  CAMPEONES.list.forEach(function(t){ html += champCard(t); });
+  list.forEach(function(t){ html += champCard(t); });
   html += '</div>';
   document.getElementById('campeones-panel').innerHTML = html;
+  try{ renderCampeonesExtra(); }catch(e){}
 }
 
 
