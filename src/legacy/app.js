@@ -6766,7 +6766,7 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
   renderCampeonesExtra = function(){
     var host=document.getElementById('campeones-panel'); if(!host) return;
     var old=document.getElementById('champ-extra'); if(old) old.remove();
-    var all=(window.TDB && TDB.tournaments || []).slice();
+    var all=[]; try{ all=(TDB && TDB.tournaments || []).slice(); }catch(e){ all=[]; }
     if(!all.length) return;
     var live=all.filter(function(t){ return t.status==='active'; });
     var done=all.filter(function(t){ return t.status!=='active'; })
