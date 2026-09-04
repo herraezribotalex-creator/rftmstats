@@ -6713,3 +6713,72 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
   });
 
 })();
+
+/* ═══════════════════════════════════════════════════════════════
+   RFTM · PATCH v10 — Campeones
+   1) Se muestran TODOS los torneos (en curso, cerrados y archivados)
+   2) Dobles: las dos fotos de cada pareja; sin huecos vacíos si falta
+   ═══════════════════════════════════════════════════════════════ */
+(function(){
+  function esc3(s){ try{ return esc(s); }catch(e){ return String(s==null?'':s); } }
+  function pic(pid){
+    var nm=''; try{ nm=pName(pid)||''; }catch(e){}
+    return (typeof PHOTOS!=='undefined' && PHOTOS[pid])
+      ? '<img src="'+PHOTOS[pid]+'" alt="'+esc3(nm)+'">'
+      : '<div class="av-initials">'+esc3(nm.slice(0,2).toUpperCase()||'?')+'</div>';
+  }
+  function teamBlock(arr, kind){
+    arr=(arr||[]).filter(Boolean);
+    var head='<span class="champ-badge '+(kind==='c'?'c':'s')+'">'+(kind==='c'?'🥇 Campeón':'🥈 Subcampeón')+'</span>';
+    if(!arr.length){
+      return '<div class="champ-pos '+(kind==='c'?'campeon':'subcampeon')+'">'+head+
+        '<div class="champ-pos-name empty" style="margin-top:8px;">Por disputar</div></div>';
+    }
+    var avs='<div style="display:flex;justify-content:center;">'+arr.map(function(p,i){
+      return '<div class="champ-pos-avatar"'+(i>0?' style="margin-left:-14px;"':'')+'>'+pic(p)+'</div>';
+    }).join('')+'</div>';
+    var names=arr.map(function(p){ try{ return pName(p); }catch(e){ return ''; } }).join(' / ');
+    return '<div class="champ-pos '+(kind==='c'?'campeon':'subcampeon')+'">'+head+avs+
+      '<div class="champ-pos-name">'+esc3(names)+'</div></div>';
+  }
+  champCircle = function(ids, kind){
+    return teamBlock(Array.isArray(ids)?ids:(ids?[ids]:[]), kind);
+  };
+
+  function teamsOf(t){
+    var r;
+    try{ r=resultOf(t)||{}; }catch(e){ r={}; }
+    var c=(r.championTeam&&r.championTeam.length)?r.championTeam:(r.champion?[r.champion]:[]);
+    var s=(r.runnerUpTeam&&r.runnerUpTeam.length)?r.runnerUpTeam:(r.runnerUp?[r.runnerUp]:[]);
+    if(Array.isArray(t.champions) && t.champions.length) c=t.champions;
+    if(Array.isArray(t.runnersUp) && t.runnersUp.length) s=t.runnersUp;
+    return {c:c.filter(Boolean), s:s.filter(Boolean)};
+  }
+  function card(t, done){
+    var tm=teamsOf(t), dbl=false;
+    try{ dbl=!!(window.isDoublesCat && window.isDoublesCat(t.cat)); }catch(e){}
+    var cat=''; try{ cat=catLabel(t.cat)||''; }catch(e){}
+    return '<div class="champ-card">'+
+      '<div class="champ-card-title"><span class="dot"></span>'+(done?'🏅':'🏆')+' '+esc3(t.name)+(dbl?' · dobles':'')+'</div>'+
+      '<div class="hs-cat" style="padding:0;">'+esc3(cat)+' · T'+(t.season||'')+' · '+(done?'Finalizado':'En curso')+'</div>'+
+      '<div class="champ-positions">'+teamBlock(tm.c,'c')+teamBlock(tm.s,'s')+'</div></div>';
+  }
+  renderCampeonesExtra = function(){
+    var host=document.getElementById('campeones-panel'); if(!host) return;
+    var old=document.getElementById('champ-extra'); if(old) old.remove();
+    var all=(window.TDB && TDB.tournaments || []).slice();
+    if(!all.length) return;
+    var live=all.filter(function(t){ return t.status==='active'; });
+    var done=all.filter(function(t){ return t.status!=='active'; })
+                .sort(function(a,b){ return (b.archived||b.created||0)-(a.archived||a.created||0); });
+    var d=document.createElement('div'); d.id='champ-extra'; d.style.marginTop='18px';
+    var h='';
+    if(live.length) h+='<div class="section-title">Torneos en curso</div><div class="champ-grid">'+
+      live.map(function(t){ return card(t,false); }).join('')+'</div>';
+    if(done.length) h+='<div class="section-title" style="margin-top:20px;">Torneos finalizados</div><div class="champ-grid">'+
+      done.map(function(t){ return card(t,true); }).join('')+'</div>';
+    d.innerHTML=h;
+    host.appendChild(d);
+  };
+  try{ renderCampeonesExtra(); }catch(e){}
+})();
