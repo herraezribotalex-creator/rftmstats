@@ -2727,30 +2727,50 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
 
   champCircle = function(ids, kind){
     var arr = Array.isArray(ids) ? ids.filter(Boolean) : (ids?[ids]:[]);
-    return '<div class="champ-pos '+(kind==='c'?'campeon':'subcampeon')+'">'+
-      '<span class="champ-badge '+(kind==='c'?'c':'s')+'">'+(kind==='c'?'🥇 Campeón':'🥈 Subcampeón')+'</span>'+
+    var head='<span class="champ-badge '+(kind==='c'?'c':'s')+'">'+(kind==='c'?'🥇 Campeón':'🥈 Subcampeón')+'</span>';
+    if(!arr.length){
+      return '<div class="champ-pos '+(kind==='c'?'campeon':'subcampeon')+'">'+head+
+        '<div class="champ-pos-name empty" style="margin-top:8px;">Por disputar</div></div>';
+    }
+    return '<div class="champ-pos '+(kind==='c'?'campeon':'subcampeon')+'">'+head+
       pairAvatars(arr,'champ-pos-avatar')+
-      (arr.length ? '<div class="champ-pos-name">'+esc2(arr.map(pName).join(' / '))+'</div>'
-                  : '<div class="champ-pos-name empty">Por disputar</div>')+
-    '</div>';
+      '<div class="champ-pos-name">'+esc2(arr.map(pName).join(' / '))+'</div></div>';
   };
 
+  function champTeams(t){
+    var r={}; try{ r=resultOf(t)||{}; }catch(e){}
+    var c=(r.championTeam&&r.championTeam.length)?r.championTeam:(r.champion?[r.champion]:[]);
+    var s=(r.runnerUpTeam&&r.runnerUpTeam.length)?r.runnerUpTeam:(r.runnerUp?[r.runnerUp]:[]);
+    if(Array.isArray(t.champions)&&t.champions.length) c=t.champions;
+    if(Array.isArray(t.runnersUp)&&t.runnersUp.length) s=t.runnersUp;
+    return {c:c.filter(Boolean), s:s.filter(Boolean)};
+  }
+  function champCardOf(t, done){
+    var tm=champTeams(t);
+    var cat=''; try{ cat=catLabel(t.cat)||''; }catch(e){}
+    return '<div class="champ-card">'+
+      '<div class="champ-card-title"><span class="dot"></span>'+(done?'🏅':'🏆')+' '+esc2(t.name)+(isDbl(t.cat)?' · dobles':'')+'</div>'+
+      '<div class="hs-cat" style="padding:0;">'+esc2(cat)+' · T'+(t.season||'')+' · '+(done?'Finalizado':'En curso')+'</div>'+
+      '<div class="champ-positions">'+champCircle(tm.c,'c')+champCircle(tm.s,'s')+'</div>'+
+      '</div>';
+  }
   renderCampeonesExtra = function(){
     var host=document.getElementById('campeones-panel'); if(!host) return;
     var old=document.getElementById('champ-extra'); if(old) old.remove();
-    var act=(TDB.tournaments||[]).filter(function(t){ return t.status==='active'; });
-    if(!act.length) return;
-    var d=document.createElement('div'); d.id='champ-extra'; d.style.marginTop='18px';
-    var h='<div class="section-title">Torneos en curso</div><div class="champ-grid">';
-    act.forEach(function(t){
-      var r=resultOf(t);
-      h+='<div class="champ-card">'+
-         '<div class="champ-card-title"><span class="dot"></span>🏆 '+esc2(t.name)+(isDbl(t.cat)?' · dobles':'')+'</div>'+
-         '<div class="hs-cat" style="padding:0;">'+esc2(catLabel(t.cat))+' · T'+t.season+'</div>'+
-         '<div class="champ-positions">'+champCircle(r.championTeam,'c')+champCircle(r.runnerUpTeam,'s')+'</div>'+
-         '</div>';
+    var all=(TDB.tournaments||[]).slice();
+    if(!all.length) return;
+    var live=[], done=[];
+    all.forEach(function(t){
+      (champTeams(t).c.length ? done : live).push(t);
     });
-    d.innerHTML=h+'</div>';
+    done.sort(function(a,b){ return (b.archived||b.created||0)-(a.archived||a.created||0); });
+    var d=document.createElement('div'); d.id='champ-extra'; d.style.marginTop='18px';
+    var h='';
+    if(live.length) h+='<div class="section-title">Torneos en curso</div><div class="champ-grid">'+
+      live.map(function(t){ return champCardOf(t,false); }).join('')+'</div>';
+    if(done.length) h+='<div class="section-title"'+(live.length?' style="margin-top:20px;"':'')+'>Torneos finalizados</div><div class="champ-grid">'+
+      done.map(function(t){ return champCardOf(t,true); }).join('')+'</div>';
+    d.innerHTML=h;
     host.appendChild(d);
   };
 
@@ -5600,8 +5620,9 @@ function champPos(ids, badgeCls, badgeLabel, posCls){
   var html = '<div class="champ-pos '+posCls+'">';
   html += '<span class="champ-badge '+badgeCls+'">'+badgeLabel+'</span>';
   if(ids){
-    var arr = Array.isArray(ids) ? ids : [ids];
-    var players = arr.map(playerById);
+    var arr = (Array.isArray(ids) ? ids : [ids]).filter(Boolean);
+    var players = arr.map(playerById).filter(Boolean);
+    if(!players.length){ return '<div class="champ-pos '+posCls+'"><span class="champ-badge '+badgeCls+'">'+badgeLabel+'</span><div class="champ-pos-name empty" style="margin-top:8px;">Por disputar</div></div>'; }
     html += '<div style="display:flex;justify-content:center;">'+players.map(function(p,i){
       var ph = (typeof PHOTOS!=='undefined'&&PHOTOS[p.id]) ? '<img src="'+PHOTOS[p.id]+'" alt="'+p.name+'">' : '<div class="av-initials">'+p.name.slice(0,2).toUpperCase()+'</div>';
       return '<div class="champ-pos-avatar"'+(i>0?' style="margin-left:-14px;"':'')+'>'+ph+'</div>';
@@ -5609,8 +5630,7 @@ function champPos(ids, badgeCls, badgeLabel, posCls){
     html += '<div class="champ-pos-name">'+players.map(function(p){ return p.name; }).join(' / ')+'</div>';
     html += '<div style="margin-top:2px;display:flex;gap:4px;justify-content:center;">'+players.map(function(p){ return flagImg(p,'flag-sm'); }).join('')+'</div>';
   } else {
-    html += '<div class="champ-pos-avatar"><div class="av-initials">?</div></div>';
-    html += '<div class="champ-pos-name empty">Por disputar</div>';
+    html += '<div class="champ-pos-name empty" style="margin-top:8px;">Por disputar</div>';
   }
   html += '</div>';
   return html;
@@ -5626,10 +5646,16 @@ function champCard(t){
   return html;
 }
 function renderCampeonesPanel(){
+  function has(x){ return Array.isArray(x) ? x.filter(Boolean).length>0 : !!x; }
+  var list = (CAMPEONES.list||[]).filter(function(t){
+    var d = CAMPEONES.data[t.key] || {};
+    return has(d.campeon) || has(d.subcampeon);
+  });
   var html = '<div class="champ-grid">';
-  CAMPEONES.list.forEach(function(t){ html += champCard(t); });
+  list.forEach(function(t){ html += champCard(t); });
   html += '</div>';
   document.getElementById('campeones-panel').innerHTML = html;
+  try{ renderCampeonesExtra(); }catch(e){}
 }
 
 
@@ -6713,3 +6739,4 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
   });
 
 })();
+
