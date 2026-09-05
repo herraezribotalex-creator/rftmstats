@@ -1108,6 +1108,25 @@ function guessPid(name){
   return p?p.id:'';
 }
 
+/* ---- autoguardado local del marcador: punto a punto ---- */
+var LV_DRAFT_NS='rftm.live.draft.';
+function lvDraftKey(mid){ return LV_DRAFT_NS+mid; }
+function lvDraftSave(mid, st){
+  try{
+    if(!st || !st.p1 || !st.p2) return;
+    localStorage.setItem(lvDraftKey(mid), JSON.stringify({ts:Date.now(), st:st}));
+  }catch(e){}
+}
+function lvDraftLoad(mid){
+  try{
+    var raw=localStorage.getItem(lvDraftKey(mid));
+    if(!raw) return null;
+    var d=JSON.parse(raw);
+    return (d && d.st && d.st.p1 && d.st.p2) ? d : null;
+  }catch(e){ return null; }
+}
+function lvDraftClear(mid){ try{ localStorage.removeItem(lvDraftKey(mid)); }catch(e){} }
+
 function buildLive(mid, ctx, defaults){
   var rec = TDB.scores[mid];
   var wrap = document.createElement('div');
@@ -1116,7 +1135,13 @@ function buildLive(mid, ctx, defaults){
   wrap.style.cssText='background:var(--card,#111827);border:1px solid var(--border,#243043);border-radius:14px;padding:14px;margin:12px 0;';
 
   var st = rec ? JSON.parse(JSON.stringify(rec)) : null;
+  var recovered=false;
+  var draft = lvDraftLoad(mid);
+  if(draft && (!rec || !rec.applied || (draft.ts||0) > (rec.ts||0))){
+    st = draft.st; recovered=true;
+  }
   if(st){ if(!st.log) st.log=[]; if(!st.ano) st.ano={a:0,b:0}; if(!st.win) st.win={a:0,b:0}; }
+
 
   function fmt(){ return fmtFor(ctx.cat, ctx.round); }
 
@@ -2606,10 +2631,18 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
   {
     renderAnoT = function(t){
       var key='T:'+t.id, ano=(TDB.anoAdd && TDB.anoAdd[key])||{};
-      var allowed=cPids(t);
-      var items=Object.keys(ano).map(function(k){ return {pid:toPid(k), n:+ano[k]||0}; })
-        .filter(function(x){ return x.pid && x.n>0 && (!Object.keys(allowed).length || allowed[x.pid]); })
-        .sort(function(a,b){ return b.n-a.n; });
+      var allowed=cPids(t), aKeys=Object.keys(allowed);
+      var items;
+      if(aKeys.length){
+        // sólo los jugadores del cuadro de este torneo: ni más ni menos
+        items=aKeys.map(function(k){ var pid=toPid(k); return {pid:pid, n:(+ano[pid]||0)}; })
+          .filter(function(x){ return !!x.pid; });
+      }else{
+        items=Object.keys(ano).map(function(k){ return {pid:toPid(k), n:+ano[k]||0}; })
+          .filter(function(x){ return x.pid && x.n>0; });
+      }
+      items.sort(function(a,b){ return b.n-a.n || pName(a.pid).localeCompare(pName(b.pid)); });
+
       var h='<div class="lv-pane" style="margin-top:12px;"><h4>🏅 Máximos anotadores del torneo</h4>';
       if(!items.length) h+='<div class="lv-kick">Sin puntos de anotador todavía.</div>';
       items.forEach(function(it,i){
@@ -3551,7 +3584,7 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
       var t=findT(String(key).slice(2));
       var allowed=null;
       try{ allowed = (t && window.compPids) ? window.compPids(t) : null; }catch(e){}
-      if(allowed && Object.keys(allowed).length) pool=pool.filter(function(p){ return allowed[p.id] || cur[p.id]; });
+      if(allowed && Object.keys(allowed).length) pool=pool.filter(function(p){ return !!allowed[p.id]; });
     }
     var h='<details class="sv-acc" style="margin-top:12px;" data-anokey="'+esc2(key)+'"><summary>🏅 Anotadores'+(title?' · '+esc2(title):'')+' (admin)</summary><div style="padding:0 14px 14px;">'+
       '<div class="lv-kick" style="margin-bottom:10px;line-height:1.7;">Sólo aparecen los jugadores de este torneo. Lo que registra el marcador ya está sumado; aquí se ajusta. Todo se refleja en <b>Extras · Anotadores</b>.</div>';
@@ -3820,7 +3853,7 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
       var store = (TDB.anoAdd || (TDB.anoAdd={}))['T:'+src.id] || (TDB.anoAdd['T:'+src.id]={});
       var pool=P().slice(), allowed=null;
       try{ allowed = window.compPids ? window.compPids(t) : null; }catch(e){}
-      if(allowed && Object.keys(allowed).length) pool=pool.filter(function(p){ return allowed[p.id] || store[p.id]; });
+      if(allowed && Object.keys(allowed).length) pool=pool.filter(function(p){ return !!allowed[p.id]; });
       pool.sort(function(a,b){ return (+store[b.id]||0)-(+store[a.id]||0) || a.name.localeCompare(b.name); });
       var total=pool.reduce(function(s,p){ return s+(+store[p.id]||0); },0);
 
