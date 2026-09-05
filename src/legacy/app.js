@@ -2606,10 +2606,18 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
   {
     renderAnoT = function(t){
       var key='T:'+t.id, ano=(TDB.anoAdd && TDB.anoAdd[key])||{};
-      var allowed=cPids(t);
-      var items=Object.keys(ano).map(function(k){ return {pid:toPid(k), n:+ano[k]||0}; })
-        .filter(function(x){ return x.pid && x.n>0 && (!Object.keys(allowed).length || allowed[x.pid]); })
-        .sort(function(a,b){ return b.n-a.n; });
+      var allowed=cPids(t), aKeys=Object.keys(allowed);
+      var items;
+      if(aKeys.length){
+        // sólo los jugadores del cuadro de este torneo: ni más ni menos
+        items=aKeys.map(function(k){ var pid=toPid(k); return {pid:pid, n:(+ano[pid]||0)}; })
+          .filter(function(x){ return !!x.pid; });
+      }else{
+        items=Object.keys(ano).map(function(k){ return {pid:toPid(k), n:+ano[k]||0}; })
+          .filter(function(x){ return x.pid && x.n>0; });
+      }
+      items.sort(function(a,b){ return b.n-a.n || pName(a.pid).localeCompare(pName(b.pid)); });
+
       var h='<div class="lv-pane" style="margin-top:12px;"><h4>🏅 Máximos anotadores del torneo</h4>';
       if(!items.length) h+='<div class="lv-kick">Sin puntos de anotador todavía.</div>';
       items.forEach(function(it,i){
