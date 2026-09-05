@@ -3559,7 +3559,7 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
       var t=findT(String(key).slice(2));
       var allowed=null;
       try{ allowed = (t && window.compPids) ? window.compPids(t) : null; }catch(e){}
-      if(allowed && Object.keys(allowed).length) pool=pool.filter(function(p){ return allowed[p.id] || cur[p.id]; });
+      if(allowed && Object.keys(allowed).length) pool=pool.filter(function(p){ return !!allowed[p.id]; });
     }
     var h='<details class="sv-acc" style="margin-top:12px;" data-anokey="'+esc2(key)+'"><summary>🏅 Anotadores'+(title?' · '+esc2(title):'')+' (admin)</summary><div style="padding:0 14px 14px;">'+
       '<div class="lv-kick" style="margin-bottom:10px;line-height:1.7;">Sólo aparecen los jugadores de este torneo. Lo que registra el marcador ya está sumado; aquí se ajusta. Todo se refleja en <b>Extras · Anotadores</b>.</div>';
@@ -3828,7 +3828,7 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
       var store = (TDB.anoAdd || (TDB.anoAdd={}))['T:'+src.id] || (TDB.anoAdd['T:'+src.id]={});
       var pool=P().slice(), allowed=null;
       try{ allowed = window.compPids ? window.compPids(t) : null; }catch(e){}
-      if(allowed && Object.keys(allowed).length) pool=pool.filter(function(p){ return allowed[p.id] || store[p.id]; });
+      if(allowed && Object.keys(allowed).length) pool=pool.filter(function(p){ return !!allowed[p.id]; });
       pool.sort(function(a,b){ return (+store[b.id]||0)-(+store[a.id]||0) || a.name.localeCompare(b.name); });
       var total=pool.reduce(function(s,p){ return s+(+store[p.id]||0); },0);
 
