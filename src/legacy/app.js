@@ -1108,6 +1108,25 @@ function guessPid(name){
   return p?p.id:'';
 }
 
+/* ---- autoguardado local del marcador: punto a punto ---- */
+var LV_DRAFT_NS='rftm.live.draft.';
+function lvDraftKey(mid){ return LV_DRAFT_NS+mid; }
+function lvDraftSave(mid, st){
+  try{
+    if(!st || !st.p1 || !st.p2) return;
+    localStorage.setItem(lvDraftKey(mid), JSON.stringify({ts:Date.now(), st:st}));
+  }catch(e){}
+}
+function lvDraftLoad(mid){
+  try{
+    var raw=localStorage.getItem(lvDraftKey(mid));
+    if(!raw) return null;
+    var d=JSON.parse(raw);
+    return (d && d.st && d.st.p1 && d.st.p2) ? d : null;
+  }catch(e){ return null; }
+}
+function lvDraftClear(mid){ try{ localStorage.removeItem(lvDraftKey(mid)); }catch(e){} }
+
 function buildLive(mid, ctx, defaults){
   var rec = TDB.scores[mid];
   var wrap = document.createElement('div');
@@ -1116,7 +1135,13 @@ function buildLive(mid, ctx, defaults){
   wrap.style.cssText='background:var(--card,#111827);border:1px solid var(--border,#243043);border-radius:14px;padding:14px;margin:12px 0;';
 
   var st = rec ? JSON.parse(JSON.stringify(rec)) : null;
+  var recovered=false;
+  var draft = lvDraftLoad(mid);
+  if(draft && (!rec || !rec.applied || (draft.ts||0) > (rec.ts||0))){
+    st = draft.st; recovered=true;
+  }
   if(st){ if(!st.log) st.log=[]; if(!st.ano) st.ano={a:0,b:0}; if(!st.win) st.win={a:0,b:0}; }
+
 
   function fmt(){ return fmtFor(ctx.cat, ctx.round); }
 
