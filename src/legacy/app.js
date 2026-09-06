@@ -1190,6 +1190,7 @@ function buildLive(mid, ctx, defaults){
 
   function renderLive(){
     var F = fmt();
+    lvDraftSave(mid, st);
     var t = runMatch(st.log, F, st.starter);
     var n1=pName(st.p1), n2=pName(st.p2);
     var aceA=0, aceB=0;
@@ -1287,6 +1288,7 @@ function buildLive(mid, ctx, defaults){
         if(k==='undo'){ st.log.pop(); st.retired=null; renderLive(); }
         else if(k==='reset'){
           st.log=[]; st.ano={a:0,b:0}; st.win={a:0,b:0}; st.retired=null;
+          lvDraftClear(mid);
           if(TDB.scores[mid] && TDB.scores[mid].applied){
             if(!isAdmin()){ toast('Activa el modo administrador para borrar lo guardado', true); renderLive(); return; }
             revertRec(mid);
@@ -1323,6 +1325,7 @@ function buildLive(mid, ctx, defaults){
     addAno(rec2, st.p1, anoA);
     addAno(rec2, st.p2, anoB);
     addSingle(mid, rec2);
+    lvDraftClear(mid);
     saveTDB('match_score', {SINGLES:SG()}).then(function(){
       refreshAll();
       toast('Guardado · stats, anotadores, H2H y rachas actualizados');
