@@ -1126,6 +1126,18 @@ function lvDraftLoad(mid){
   }catch(e){ return null; }
 }
 function lvDraftClear(mid){ try{ localStorage.removeItem(lvDraftKey(mid)); }catch(e){} }
+function lvDraftList(){
+  var out=[];
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(!k || k.indexOf(LV_DRAFT_NS)!==0) continue;
+      var mid=k.slice(LV_DRAFT_NS.length), d=lvDraftLoad(mid);
+      if(d) out.push({mid:mid, ts:d.ts||0, st:d.st});
+    }
+  }catch(e){}
+  return out.sort(function(a,b){ return b.ts-a.ts; });
+}
 
 function buildLive(mid, ctx, defaults){
   var rec = TDB.scores[mid];
@@ -1332,7 +1344,10 @@ function buildLive(mid, ctx, defaults){
     }).catch(function(){});
   }
 
-  if(st && st.p1 && st.p2) renderLive(); else renderSetup();
+  if(st && st.p1 && st.p2){
+    renderLive();
+    if(recovered) setTimeout(function(){ try{ toast('Partido recuperado · seguimos donde lo dejaste'); }catch(e){} }, 60);
+  } else renderSetup();
   return wrap;
 }
 
@@ -1607,6 +1622,21 @@ function renderMarcadorLibre(){
      '</div></div>';
   h+='<div id="mkl-host"></div>';
 
+  var drafts=lvDraftList().filter(function(d){
+    var r=TDB.scores[d.mid];
+    return !(r && r.applied && (r.ts||0)>=d.ts);
+  });
+  if(drafts.length){
+    h+='<div class="lv-pane" style="margin-top:14px;"><h4>⏸️ Partidos en curso · autoguardados en este dispositivo</h4>'+
+       '<div class="lv-kick" style="margin-bottom:8px;">Cada punto se guarda solo. Si se cierra la app, reanuda aquí donde lo dejaste.</div>';
+    drafts.forEach(function(d){
+      h+='<div class="lv-strow"><span class="l">'+esc(pName(d.st.p1))+' vs '+esc(pName(d.st.p2))+' · '+esc(catLabel(d.st.cat))+'</span>'+
+         '<span class="v"><small><a href="#" data-mkresume="'+esc(d.mid)+'" style="color:#c8f53e;">reanudar</a>'+
+         ' · <a href="#" data-mkdrop="'+esc(d.mid)+'" style="color:#ff8ba3;">descartar</a></small></span></div>';
+    });
+    h+='</div>';
+  }
+
   var libres=Object.keys(TDB.scores).filter(function(m){ return m.indexOf('LIVE-')===0; })
     .map(function(m){ return {mid:m, r:TDB.scores[m]}; })
     .sort(function(a,b){ return (b.r.ts||0)-(a.r.ts||0); });
@@ -1637,6 +1667,22 @@ function renderMarcadorLibre(){
   document.getElementById('mkl-go').onclick=function(){
     openPanel('LIVE-'+Date.now(), {cat:MK_CTX.cat, round:MK_CTX.round, tkey:'libre'});
   };
+  v.querySelectorAll('[data-mkresume]').forEach(function(a){
+    a.onclick=function(e){
+      e.preventDefault();
+      var mid=a.getAttribute('data-mkresume'), d=lvDraftLoad(mid);
+      if(!d) return renderMarcadorLibre();
+      openPanel(mid, {cat:d.st.cat, round:d.st.round, tid:d.st.tid||null, tkey:d.st.tkey||null}, {p1:d.st.p1, p2:d.st.p2});
+    };
+  });
+  v.querySelectorAll('[data-mkdrop]').forEach(function(a){
+    a.onclick=function(e){
+      e.preventDefault();
+      lvDraftClear(a.getAttribute('data-mkdrop'));
+      renderMarcadorLibre();
+      toast('Partido en curso descartado');
+    };
+  });
   v.querySelectorAll('[data-mkopen]').forEach(function(a){
     a.onclick=function(e){ e.preventDefault();
       var mid=a.getAttribute('data-mkopen'), r=TDB.scores[mid];
