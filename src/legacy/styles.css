@@ -999,3 +999,65 @@
   .ranking-modal-close{background:none;border:none;color:var(--text-mute);font-size:22px;cursor:pointer;line-height:1;padding:4px;}
   .ranking-modal-close:hover{color:var(--loss);}
   .ranking-modal-body{padding:6px 20px 18px;overflow-y:auto;}
+
+/* ================= LIQUID GLASS ================= */
+:root{
+  --bg:#050a16;
+  --surface:rgba(255,255,255,.055);
+  --surface-2:rgba(255,255,255,.08);
+  --card:rgba(255,255,255,.06);
+  --card-hover:rgba(255,255,255,.10);
+  --border:rgba(255,255,255,.14);
+  --border-soft:rgba(255,255,255,.08);
+  --blue:#5b8cff;
+  --glass-blur:blur(22px) saturate(180%);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.04);
+  --shadow-card:0 10px 34px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18);
+}
+body{
+  background:
+    radial-gradient(900px 620px at 8% -5%, rgba(91,140,255,.38), transparent 60%),
+    radial-gradient(800px 560px at 105% 15%, rgba(200,245,62,.16), transparent 55%),
+    radial-gradient(900px 700px at 50% 115%, rgba(160,107,255,.26), transparent 60%),
+    radial-gradient(600px 420px at 85% 70%, rgba(56,214,255,.14), transparent 60%),
+    #050a16 !important;
+  background-attachment:fixed !important;
+}
+.topbar{
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.03)) !important;
+  backdrop-filter:var(--glass-blur) !important;
+  border-bottom:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:0 8px 30px rgba(0,0,0,.35), var(--glass-hi) !important;
+}
+.tabs{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:999px;padding:4px;
+  backdrop-filter:var(--glass-blur);
+  box-shadow:var(--glass-hi);
+}
+.tab{border-radius:999px !important;}
+.tab.active{
+  background:linear-gradient(180deg,rgba(255,255,255,.26),rgba(255,255,255,.08)) !important;
+  color:#fff !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 4px 16px rgba(91,140,255,.35), 0 0 0 1px rgba(200,245,62,.35) !important;
+}
+.ticker,footer,
+[class*="card"]:not(.cartas-grid),[class*="panel"],[class*="-box"],[class*="pane"],
+.profile > *,.empty-state,.suggestions,.search-input,.sub-tab,.comp-tab,.sub-tab-sm,
+.extras-hero,.vs-badge,.lv-panel,.scorer-panel,table{
+  background-color:rgba(255,255,255,.055) !important;
+  backdrop-filter:var(--glass-blur);
+  border-color:rgba(255,255,255,.13) !important;
+  box-shadow:0 10px 30px rgba(0,0,0,.35), var(--glass-hi);
+}
+[class*="card"]:hover,[class*="-box"]:hover{background-color:rgba(255,255,255,.09) !important;}
+.sub-tab.active,.comp-tab.active,.sub-tab-sm.active{
+  background:linear-gradient(180deg,rgba(200,245,62,.28),rgba(200,245,62,.08)) !important;
+  border-color:rgba(200,245,62,.55) !important;
+  color:#f4ffd6 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 4px 18px rgba(200,245,62,.22) !important;
+}
+.search-input:focus{border-color:rgba(91,140,255,.8) !important;box-shadow:0 0 0 4px rgba(91,140,255,.2), var(--glass-hi) !important;}
+button{transition:background .2s, box-shadow .2s, transform .15s;}
+button:active{transform:scale(.97);}
