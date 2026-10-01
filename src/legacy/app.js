@@ -2533,24 +2533,7 @@ function champCircle(pid, kind){
          : '<div class="champ-pos-name empty">Por disputar</div>')+
   '</div>';
 }
-function renderCampeonesExtra(){
-  var host=document.getElementById('campeones-panel'); if(!host) return;
-  var old=document.getElementById('champ-extra'); if(old) old.remove();
-  var act=TDB.tournaments.filter(function(t){ return t.status==='active'; });
-  if(!act.length) return;
-  var d=document.createElement('div'); d.id='champ-extra'; d.style.marginTop='18px';
-  var h='<div class="section-title">Torneos en curso</div><div class="champ-grid">';
-  act.forEach(function(t){
-    var r=resultOf(t);
-    h+='<div class="champ-card">'+
-       '<div class="champ-card-title"><span class="dot"></span>🏆 '+esc(t.name)+'</div>'+
-       '<div class="hs-cat" style="padding:0;">'+esc(catLabel(t.cat))+' · T'+t.season+'</div>'+
-       '<div class="champ-positions">'+champCircle(r.champion,'c')+champCircle(r.runnerUp,'s')+'</div>'+
-       '</div>';
-  });
-  d.innerHTML=h+'</div>';
-  host.appendChild(d);
-}
+function renderCampeonesExtra(){ /* sobrescrita más abajo: solo torneos finalizados */ }
 
 /* ---------------------------------------------------------------
    15 · ficha de jugador · servicio y resto acumulado
