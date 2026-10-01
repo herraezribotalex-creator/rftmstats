@@ -2841,16 +2841,14 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
     var old=document.getElementById('champ-extra'); if(old) old.remove();
     var all=(TDB.tournaments||[]).slice();
     if(!all.length) return;
-    var live=[], done=[];
+    var done=[];
     all.forEach(function(t){
-      (champTeams(t).c.length ? done : live).push(t);
+      if(champTeams(t).c.length) done.push(t);
     });
     done.sort(function(a,b){ return (b.archived||b.created||0)-(a.archived||a.created||0); });
     var d=document.createElement('div'); d.id='champ-extra'; d.style.marginTop='18px';
     var h='';
-    if(live.length) h+='<div class="section-title">Torneos en curso</div><div class="champ-grid">'+
-      live.map(function(t){ return champCardOf(t,false); }).join('')+'</div>';
-    if(done.length) h+='<div class="section-title"'+(live.length?' style="margin-top:20px;"':'')+'>Torneos finalizados</div><div class="champ-grid">'+
+    if(done.length) h+='<div class="champ-grid">'+
       done.map(function(t){ return champCardOf(t,true); }).join('')+'</div>';
     d.innerHTML=h;
     host.appendChild(d);
