@@ -2792,7 +2792,7 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
 
   champCircle = function(ids, kind){
     var arr = Array.isArray(ids) ? ids.filter(Boolean) : (ids?[ids]:[]);
-    var head='<span class="champ-badge '+(kind==='c'?'c':'s')+'">'+(kind==='c'?'🥇 Campeón':'🥈 Subcampeón')+'</span>';
+    var head='<span class="champ-badge '+(kind==='c'?'c':'s')+'">'+(kind==='c'?'Campeón':'Finalista')+'</span>';
     if(!arr.length){
       return '<div class="champ-pos '+(kind==='c'?'campeon':'subcampeon')+'">'+head+
         '<div class="champ-pos-name empty" style="margin-top:8px;">Por disputar</div></div>';
@@ -2813,16 +2813,20 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
   function champCardOf(t, done){
     var tm=champTeams(t);
     var cat=''; try{ cat=catLabel(t.cat)||''; }catch(e){}
-    return '<div class="champ-card">'+
-      '<div class="champ-card-title"><span class="dot"></span>'+(done?'🏅':'🏆')+' '+esc2(t.name)+(isDbl(t.cat)?' · dobles':'')+'</div>'+
-      '<div class="hs-cat" style="padding:0;">'+esc2(cat)+' · T'+(t.season||'')+' · '+(done?'Finalizado':'En curso')+'</div>'+
+    return '<div class="champ-card finished">'+
+      '<div class="champ-card-head">'+
+        '<div class="champ-card-title"><span class="dot"></span>'+esc2(t.name)+(isDbl(t.cat)?' · dobles':'')+'</div>'+
+        '<span class="champ-status">Finalizado</span>'+
+      '</div>'+
+      '<div class="champ-meta">'+esc2(cat)+' · Temporada '+(t.season||'')+'</div>'+
       '<div class="champ-positions">'+champCircle(tm.c,'c')+champCircle(tm.s,'s')+'</div>'+
       '</div>';
   }
   renderCampeonesExtra = function(){
     var host=document.getElementById('campeones-panel'); if(!host) return;
     var old=document.getElementById('champ-extra'); if(old) old.remove();
-    var all=(TDB.tournaments||[]).slice();
+    // Solo torneos finalizados que siguen en Comp.; los archivados en Historial no salen aquí.
+    var all=(TDB.tournaments||[]).filter(function(t){ return t.status!=='hist'; });
     if(!all.length) return;
     var done=[];
     all.forEach(function(t){
@@ -5703,8 +5707,8 @@ function champCard(t){
   var html = '<div class="champ-card">';
   html += '<div class="champ-card-title"><span class="dot"></span>'+t.icon+' '+t.label+'</div>';
   html += '<div class="champ-positions">';
-  html += champPos(d.campeon, 'c', '🥇 Campeón', 'campeon');
-  html += champPos(d.subcampeon, 's', '🥈 Finalista', 'subcampeon');
+  html += champPos(d.campeon, 'c', 'Campeón', 'campeon');
+  html += champPos(d.subcampeon, 's', 'Finalista', 'subcampeon');
   html += '</div></div>';
   return html;
 }
