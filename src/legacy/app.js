@@ -245,11 +245,17 @@
 
     h+='<div class="adm-card"><div class="adm-h">Nuevo partido de dobles</div>'+
       '<div class="adm-row">'+
+        '<span class="adm-note" style="min-width:70px;">Pareja A</span>'+
         '<select class="adm-sel" id="dp1">'+playerOptions('')+'</select>'+
+        '<select class="adm-sel" id="dp1b">'+playerOptions('')+'</select>'+
+      '</div><div class="adm-row">'+
+        '<span class="adm-note" style="min-width:70px;">Pareja B</span>'+
         '<select class="adm-sel" id="dp2">'+playerOptions('')+'</select>'+
-        '<select class="adm-sel" id="dw"><option value="">Ganador…</option></select>'+
+        '<select class="adm-sel" id="dp2b">'+playerOptions('')+'</select>'+
+      '</div><div class="adm-row">'+
+        '<select class="adm-sel" id="dw"><option value="">Pareja ganadora…</option><option value="A">Pareja A</option><option value="B">Pareja B</option></select>'+
         '<select class="adm-sel" id="dcomp">'+DOUBLES_CATS.map(function(c){return '<option value="'+esc(c[0])+'">'+esc(c[1])+'</option>';}).join('')+'</select>'+
-      '</div><div class="adm-row"><button class="adm-btn" id="dadd">Guardar dobles</button></div></div>';
+      '</div><div class="adm-row"><button class="adm-btn" id="dadd">Guardar dobles</button><span class="adm-note">Suma a los 4 jugadores: H2H, títulos de dobles y sus derivados.</span></div></div>';
 
     var last = SINGLES.slice(-60).reverse();
     h+='<div class="adm-card"><div class="adm-h">Últimos partidos ('+SINGLES.length+' en total)</div><div class="adm-scroll"><table class="adm-tbl"><thead><tr><th>#</th><th>Partido</th><th>Ganador</th><th>Competición</th><th></th></tr></thead><tbody>';
@@ -270,7 +276,7 @@
       }
       document.getElementById(s1).onchange=upd; document.getElementById(s2).onchange=upd;
     }
-    wireWinner('np1','np2','nw'); wireWinner('dp1','dp2','dw');
+    wireWinner('np1','np2','nw');
 
     document.getElementById('nadd').onclick=function(){
       var p1=+document.getElementById('np1').value, p2=+document.getElementById('np2').value, w=+document.getElementById('nw').value;
@@ -282,10 +288,15 @@
       save(['SINGLES'],'match_add');
     };
     document.getElementById('dadd').onclick=function(){
-      var p1=+document.getElementById('dp1').value, p2=+document.getElementById('dp2').value, w=+document.getElementById('dw').value;
-      if(!p1||!p2||p1===p2) return toast('Elige dos jugadores distintos', true);
-      if(!w) return toast('Elige el ganador', true);
-      DOUBLES.push({p1:p1,p2:p2,w:w,comp:document.getElementById('dcomp').value});
+      var a1=+document.getElementById('dp1').value, a2=+document.getElementById('dp1b').value,
+          b1=+document.getElementById('dp2').value, b2=+document.getElementById('dp2b').value, wt=document.getElementById('dw').value;
+      var all=[a1,a2,b1,b2];
+      if(all.some(function(x){return !x;})) return toast('Elige los 4 jugadores', true);
+      if(new Set(all).size!==4) return toast('Los 4 jugadores deben ser distintos', true);
+      if(!wt) return toast('Elige la pareja ganadora', true);
+      var comp=document.getElementById('dcomp').value;
+      DOUBLES.push({p1:a1,p2:b1,w:wt==='A'?a1:b1,comp:comp,pa:a2,pb:b2});
+      DOUBLES.push({p1:a2,p2:b2,w:wt==='A'?a2:b2,comp:comp,pa:a1,pb:b1});
       save(['DOUBLES'],'double_add');
     };
     el.querySelectorAll('[data-del]').forEach(function(b){
@@ -486,7 +497,44 @@
         '<td style="color:#c8f53e;">+'+a+'</td><td><b>'+(b+a)+'</b></td></tr>';
     });
     h+='</tbody></table></div><div class="adm-row" style="margin-top:10px;"><button class="adm-btn" id="psave">Guardar puntos base</button></div></div>';
+    var autoTot=Object.keys(auto).reduce(function(t,k){return t+(auto[k]||0);},0);
+    var top=PLAYERS.map(function(p){return {p:p,v:(base[p.id]||0)+(auto[p.id]||0)};}).sort(function(a,b){return b.v-a.v;}).slice(0,3);
+    var medal=['#f0c040','#c9d2e0','#d08a4a'];
+    var pod='<div class="adm-card"><div class="adm-h">Podio actual del ranking</div><div style="display:flex;gap:10px;flex-wrap:wrap;">';
+    top.forEach(function(x,i){ pod+='<div style="flex:1;min-width:120px;padding:12px;border-radius:10px;background:var(--surface,rgba(255,255,255,.04));border-top:3px solid '+medal[i]+';"><div style="font-size:11px;letter-spacing:.12em;color:'+medal[i]+';font-weight:800;">#'+(i+1)+'</div><div style="font-weight:700;margin-top:4px;">'+esc(x.p.name)+'</div><div style="font-size:22px;font-weight:800;">'+x.v+' <span style="font-size:11px;opacity:.6;">pts</span></div></div>'; });
+    pod+='</div></div>';
+    h=pod+h+'<div class="adm-card"><div class="adm-h">Mantenimiento de puntos</div>'+
+      '<div class="adm-note">Ahora mismo hay <b style="color:#c8f53e;">+'+autoTot+'</b> puntos automáticos pendientes.</div>'+
+      '<div class="adm-row" style="margin-top:10px;"><button class="adm-btn" id="ptransfer">Pasar automáticos a Base</button>'+
+      '<span class="adm-note">Suma los automáticos a la Base y los deja a 0. El total no cambia.</span></div>'+
+      '<div class="adm-row"><button class="adm-btn dan" id="preset">Reiniciar puntos</button>'+
+      '<span class="adm-note">Pone Base y Automático a 0 para todos (nueva temporada). Los partidos, títulos e historial no se tocan.</span></div></div>';
     el.innerHTML=h;
+    function markAll(){ var arr=(window.__DB['COMP_RESULTS']||[]).map(function(r){ var c=Object.assign({},r); c.transferred=true; return c; }); window.__DB['COMP_RESULTS']=arr; }
+    document.getElementById('ptransfer').onclick=function(){
+      if(!autoTot) return toast('No hay puntos automáticos pendientes', true);
+      requirePin('Pasar automáticos a Base', function(){
+        confirmBox('Se sumarán '+autoTot+' puntos automáticos a la Base. El ranking total no cambia.', function(){
+          ['SEASON_POINTS_BASE','SEASON_ONLY_POINTS_BASE'].forEach(function(k){
+            var b=Object.assign({},window.__DB[k]||{});
+            Object.keys(auto).forEach(function(pid){ b[pid]=(b[pid]||0)+(auto[pid]||0); });
+            window.__DB[k]=b;
+          });
+          markAll();
+          save(['SEASON_POINTS','SEASON_ONLY_POINTS','COMP_RESULTS'],'points_transfer');
+        });
+      });
+    };
+    document.getElementById('preset').onclick=function(){
+      requirePin('Reiniciar puntos', function(){
+        confirmBox('Todos los jugadores quedarán con 0 puntos de ranking. No se puede deshacer.', function(){
+          var z={}; PLAYERS.forEach(function(p){ z[p.id]=0; });
+          window.__DB['SEASON_POINTS_BASE']=z; window.__DB['SEASON_ONLY_POINTS_BASE']=Object.assign({},z);
+          markAll();
+          save(['SEASON_POINTS','SEASON_ONLY_POINTS','COMP_RESULTS'],'points_reset');
+        });
+      });
+    };
     document.getElementById('psave').onclick=function(){
       var nb={};
       el.querySelectorAll('[data-ppid]').forEach(function(tr){ nb[tr.dataset.ppid]=+tr.querySelector('.p-b').value||0; });

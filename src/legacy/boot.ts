@@ -65,6 +65,7 @@ function installGlobals() {
       out[String(pid)] = (out[String(pid)] || 0) + n;
     };
     res.forEach((r) => {
+      if (r['transferred']) return;
       const t = String(r['type']);
       add(r['champion'], (table['Campeon'] || {})[t] || 0);
       add(r['runnerUp'], (table['Finalista'] || {})[t] || 0);
