@@ -154,6 +154,15 @@
     '.adm-subbtn.on{background:#c8f53e;color:#0a0e17;border-color:#c8f53e;font-weight:800;}',
     '.adm-note{font-size:11px;color:var(--text-mute,#8b93a7);line-height:1.5;font-family:ui-monospace,monospace;}',
     '.adm-scroll{overflow:auto;max-height:420px;}',
+    '.adm-ano-podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 14px;align-items:end;}',
+    '.adm-ano-podium>div{position:relative;overflow:hidden;min-width:0;background:var(--surface,#0f1622);border:1px solid var(--border,#243043);border-top:3px solid var(--medal);border-radius:8px;padding:11px 10px;}',
+    '.adm-ano-rank{font:800 10px/1 ui-monospace,monospace;letter-spacing:.12em;color:var(--medal);text-transform:uppercase;}',
+    '.adm-ano-name{margin-top:7px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+    '.adm-ano-score{margin-top:3px;font:800 22px/1.1 var(--font-display,inherit);color:var(--text,#e8ecf4);}',
+    '.adm-ano-score small{font:600 10px/1 ui-monospace,monospace;color:var(--text-mute,#8b93a7);}',
+    '.adm-ano-bar{width:100%;min-width:86px;height:5px;background:var(--surface,#0f1622);border-radius:3px;overflow:hidden;}',
+    '.adm-ano-bar>i{display:block;height:100%;width:var(--score);background:linear-gradient(90deg,var(--blue,#5b8cff),var(--chartreuse,#c8f53e));border-radius:3px;}',
+    '@media(max-width:560px){.adm-ano-podium{grid-template-columns:1fr;}.adm-ano-podium>div{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:8px;}.adm-ano-name,.adm-ano-score{margin-top:0;}.adm-ano-score{font-size:18px;}}',
     '#admin-badge{position:fixed;right:12px;bottom:12px;z-index:9000;background:#c8f53e;color:#0a0e17;font-family:ui-monospace,monospace;font-size:10px;font-weight:800;letter-spacing:.1em;padding:7px 12px;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5);}',
     '.tab.admtab{color:#c8f53e;}'
   ].join('\n');
@@ -488,13 +497,13 @@
     var base=window.__DB['SEASON_POINTS_BASE']||{};
     var auto=window.__autoPoints();
     var h='<div class="adm-card"><div class="adm-h">Puntos del ranking</div>'+
-      '<div class="adm-note">La columna <b>Base</b> es el histórico editable. <b>Automático</b> son los puntos que suman las competiciones cerradas. El total es lo que se ve en el Ranking.</div>'+
-      '<div class="adm-scroll" style="margin-top:10px;"><table class="adm-tbl"><thead><tr><th>Jugador</th><th>Base</th><th>Automático</th><th>Total</th></tr></thead><tbody>';
+      '<div class="adm-note"><b>Temporada Única</b> son los puntos automáticos de las competiciones cerradas. <b>General</b> suma la Base histórica y Temporada Única; es el total que aparece en el Ranking.</div>'+ 
+      '<div class="adm-scroll" style="margin-top:10px;"><table class="adm-tbl"><thead><tr><th>Jugador</th><th>Base</th><th>Temporada Única</th><th>General</th></tr></thead><tbody>';
     PLAYERS.forEach(function(p){
       var b=base[p.id]||0, a=auto[p.id]||0;
       h+='<tr data-ppid="'+p.id+'"><td>'+esc(p.name)+'</td>'+
         '<td><input class="adm-in p-b" type="number" value="'+b+'" style="width:90px;flex:none;"></td>'+
-        '<td style="color:#c8f53e;">+'+a+'</td><td><b>'+(b+a)+'</b></td></tr>';
+        '<td style="color:#c8f53e;">'+a+'</td><td><b>'+(b+a)+'</b></td></tr>';
     });
     h+='</tbody></table></div><div class="adm-row" style="margin-top:10px;"><button class="adm-btn" id="psave">Guardar puntos base</button></div></div>';
     var autoTot=Object.keys(auto).reduce(function(t,k){return t+(auto[k]||0);},0);
@@ -3922,11 +3931,32 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
     },
 
     anotadores: function(el){
+      var general=(typeof allAnotadoresRows==='function')?allAnotadoresRows():[];
+      var maxGeneral=general.length?Math.max(1,general[0].wins):1;
+      var medals=['#f0c040','#c9d2e0','#d08a4a'];
+      var h='<div class="adm-card"><div class="adm-h">Clasificación general de anotadores</div>'+ 
+        '<div class="adm-note">Suma los puntos de todos los torneos. Un ace suma un punto de anotador; un punto de anotador no cuenta como ace.</div>';
+      if(general.length){
+        h+='<div class="adm-ano-podium">'+general.slice(0,3).map(function(r,i){
+          return '<div style="--medal:'+medals[i]+'"><div class="adm-ano-rank">#'+(i+1)+'</div>'+ 
+            '<div class="adm-ano-name" title="'+esc2(r.k)+'">'+esc2(r.k)+'</div>'+ 
+            '<div class="adm-ano-score">'+r.wins+' <small>pts</small></div></div>';
+        }).join('')+'</div>'+ 
+        '<div class="adm-scroll"><table class="adm-tbl"><thead><tr><th>#</th><th>Jugador</th><th>Progreso</th><th style="text-align:right;">Total</th></tr></thead><tbody>'+ 
+        general.map(function(r,i){
+          var pct=Math.max(0,Math.round((r.wins/maxGeneral)*100));
+          return '<tr><td style="color:'+(medals[i]||'var(--text-mute,#8b93a7)')+';font-weight:800;">'+(i+1)+'</td>'+ 
+            '<td><b>'+esc2(r.k)+'</b></td><td><div class="adm-ano-bar"><i style="--score:'+pct+'%"></i></div></td>'+ 
+            '<td style="text-align:right;color:'+(i<3?medals[i]:'var(--text,#e8ecf4)')+';font-weight:800;">'+r.wins+'</td></tr>';
+        }).join('')+'</tbody></table></div>';
+      } else h+='<div class="adm-note" style="margin-top:10px;">Todavía no hay anotadores.</div>';
+      h+='</div>';
+
       /* Fuente única: los mismos torneos que salen en Admin · Competiciones (activos/cerrados) */
       var list=(TDB.tournaments||[]).filter(function(t){ return t.status==='active' || t.status==='closed'; })
         .map(function(t){ return {id:t.id, t:t, name:t.name, cat:t.cat, season:t.season, status:t.status||'active'}; });
       if(!list.length){
-        el.innerHTML='<div class="adm-card"><div class="adm-h">Anotadores</div><div class="adm-note">No hay competiciones activas. Crea un torneo en <b>Admin · Torneos</b> y aparecerá aquí y en <b>Admin · Competiciones</b>.</div></div>';
+        el.innerHTML=h+'<div class="adm-card"><div class="adm-h">Anotadores por torneo</div><div class="adm-note">No hay competiciones activas. Crea un torneo en <b>Admin · Torneos</b> y aparecerá aquí y en <b>Admin · Competiciones</b>.</div></div>';
         return;
       }
       if(!ANOSEL || !list.filter(function(x){ return String(x.id)===String(ANOSEL); }).length) ANOSEL=list[0].id;
@@ -3939,7 +3969,7 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
       pool.sort(function(a,b){ return (+store[b.id]||0)-(+store[a.id]||0) || a.name.localeCompare(b.name); });
       var total=pool.reduce(function(s,p){ return s+(+store[p.id]||0); },0);
 
-      var h='<div class="adm-card"><div class="adm-h">Anotadores por torneo</div><div class="adm-row">'+
+      h+='<div class="adm-card"><div class="adm-h">Anotadores por torneo</div><div class="adm-row">'+
         '<select class="adm-sel" id="an-src">'+list.map(function(x){
           return '<option value="'+esc2(String(x.id))+'"'+(String(x.id)===String(ANOSEL)?' selected':'')+'>'+esc2(x.name)+' · '+esc2(catLabel(x.cat))+' · T'+x.season+(x.status==='closed'?' · cerrado':'')+'</option>';
         }).join('')+'</select>'+
