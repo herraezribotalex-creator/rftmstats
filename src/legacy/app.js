@@ -1260,6 +1260,7 @@ function buildLive(mid, ctx, defaults){
   function renderLive(){
     var F = fmt();
     lvDraftSave(mid, st);
+    tvBroadcast(mid, st, ctx);
     var t = runMatch(st.log, F, st.starter);
     var n1=pName(st.p1), n2=pName(st.p2);
     var aceA=0, aceB=0;
@@ -1332,7 +1333,7 @@ function buildLive(mid, ctx, defaults){
       '<div class="lv-half">'+statPane(n1,t.stats.a,t.stats.b)+statPane(n2,t.stats.b,t.stats.a)+'</div>'+
       '<div class="lv-kick" style="margin-top:10px;text-align:center;line-height:1.6;">Guardar acumula estadísticas, anotadores (aces + winners) y actualiza H2H y rachas. Reiniciar borra también lo guardado de este partido.</div>';
 
-    wrap.querySelector('.lv-x').onclick=function(){ wrap.remove(); };
+    wrap.querySelector('.lv-x').onclick=function(){ tvClear(); wrap.remove(); };
     wrap.querySelectorAll('.lv-b').forEach(function(b){
       b.onclick=function(){ st.log.push(b.getAttribute('data-a')); renderLive(); };
     });
@@ -1358,6 +1359,7 @@ function buildLive(mid, ctx, defaults){
         else if(k==='reset'){
           st.log=[]; st.ano={a:0,b:0}; st.win={a:0,b:0}; st.retired=null;
           lvDraftClear(mid);
+          tvClear();
           if(TDB.scores[mid] && TDB.scores[mid].applied){
             if(!isAdmin()){ toast('Activa el modo administrador para borrar lo guardado', true); renderLive(); return; }
             revertRec(mid);
@@ -1395,6 +1397,7 @@ function buildLive(mid, ctx, defaults){
     addAno(rec2, st.p2, anoB);
     addSingle(mid, rec2);
     lvDraftClear(mid);
+    tvClear();
     saveTDB('match_score', {SINGLES:SG()}).then(function(){
       refreshAll();
       toast('Guardado · stats, anotadores, H2H y rachas actualizados');
