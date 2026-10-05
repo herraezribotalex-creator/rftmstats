@@ -64,7 +64,15 @@ function LigaApp() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "app_state" },
-        () => {
+        (payload) => {
+          const row = payload.new as { key?: string; value?: unknown } | null;
+          if (row?.key === "LIVE_TV") {
+            window.__DB = window.__DB || {};
+            window.__DB["LIVE_TV"] = row.value;
+            window.dispatchEvent(new Event("rftm:live-tv"));
+            return;
+          }
+          if (window.__rftmTvOpen) return;
           const mine = Date.now() - (window.__rftmLastSave ?? 0) < 4000;
           if (mine) return;
           window.clearTimeout(reloadTimer.current);
