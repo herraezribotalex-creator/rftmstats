@@ -6911,3 +6911,112 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
 
 })();
 
+
+/* ===== MODO TV · pantalla de estadio en directo ===== */
+(function(){
+  var ov=null, lastLog=-1;
+
+  function tvData(){
+    var v = window.__DB && window.__DB[TV_KEY];
+    return (v && v.p1 && v.p2) ? v : null;
+  }
+
+  function setCells(t, F, side){
+    if(F.mode==='games'){
+      return '<span class="tv-set'+(t.done&&t.winner===side?' won':'')+'">'+(side==='a'?t.gA:t.gB)+'</span>';
+    }
+    var out='';
+    for(var i=0;i<3;i++){
+      var pl=t.sets[i], cur=(!pl && i===t.sets.length && !t.done);
+      var v = pl ? (side==='a'?pl[0]:pl[1]) : (cur ? (side==='a'?t.gA:t.gB) : '·');
+      var won = pl ? ((side==='a'?pl[0]:pl[1]) > (side==='a'?pl[1]:pl[0])) : false;
+      out+='<span class="tv-set'+(cur?' cur':'')+(won?' won':'')+'">'+v+'</span>';
+    }
+    return out;
+  }
+
+  function row(t, F, d, side){
+    var pid = side==='a'?d.p1:d.p2;
+    var nm = pName(pid);
+    var serving = !t.done && t.server===side;
+    var isWin = t.done && t.winner===side;
+    var pts = t.done ? '—' : (side==='a'?t.ptA:t.ptB);
+    return '<div class="tv-row'+(isWin?' win':'')+'">'+
+      '<div class="tv-who">'+avaHtml(pid)+
+        '<div class="tv-nmwrap"><div class="tv-nm">'+esc(nm)+(isWin?' <span class="tv-crown">CAMPEÓN</span>':'')+'</div>'+
+        '<div class="tv-sub">'+(serving?'<span class="tv-ball"></span>Al saque':'Al resto')+'</div></div></div>'+
+      '<div class="tv-sets">'+setCells(t,F,side)+'</div>'+
+      '<div class="tv-pts'+(serving?' srv':'')+'">'+pts+'</div>'+
+    '</div>';
+  }
+
+  function render(flash){
+    if(!ov) return;
+    var d=tvData();
+    if(!d){
+      ov.innerHTML='<button class="tv-close" aria-label="Cerrar">×</button>'+
+        '<div class="tv-empty"><div class="tv-empty-ball">🎾</div>'+
+        '<div class="tv-empty-t">No hay partido en directo</div>'+
+        '<div class="tv-empty-s">Cuando el administrador empiece un partido, el marcador aparecerá aquí punto a punto.</div></div>';
+      bindClose();
+      return;
+    }
+    var F=fmtFor(d.cat, d.round);
+    var t=runMatch(d.log||[], F, d.starter||'a');
+    var state = t.done ? ('Final'+(d.retired?' · retirada':'')) : (t.tb?'Tie-break':'En juego');
+    ov.innerHTML=
+      '<button class="tv-close" aria-label="Cerrar">×</button>'+
+      '<div class="tv-card'+(flash?' tv-flash':'')+'">'+
+        '<div class="tv-top"><span class="tv-cat">'+esc(catLabel(d.cat))+' · '+esc(roundLabel(d.round))+'</span>'+
+          (t.done ? '<span class="tv-final">Finalizado</span>' : '<span class="tv-livebdg"><span class="tv-dot"></span>EN DIRECTO</span>')+'</div>'+
+        row(t,F,d,'a')+
+        '<div class="tv-div"></div>'+
+        row(t,F,d,'b')+
+        (t.bp && !t.done ? '<div class="tv-bp">⚠ Bola de break para '+esc(t.bpFor==='a'?pName(d.p1):pName(d.p2))+'</div>' : '')+
+        '<div class="tv-foot"><span>'+esc(F.label)+'</span><span>'+esc(state)+'</span></div>'+
+      '</div>';
+    bindClose();
+  }
+
+  function bindClose(){
+    var b=ov && ov.querySelector('.tv-close');
+    if(b) b.onclick=close;
+  }
+
+  function open(){
+    if(ov) return;
+    ov=document.createElement('div');
+    ov.className='tv-ov';
+    document.body.appendChild(ov);
+    window.__rftmTvOpen=true;
+    lastLog=-1;
+    render(false);
+  }
+  function close(){
+    if(!ov) return;
+    ov.remove(); ov=null;
+    window.__rftmTvOpen=false;
+  }
+
+  window.addEventListener('rftm:live-tv', function(){
+    if(!ov) return;
+    var d=tvData();
+    var n=(d && d.log) ? d.log.length : -1;
+    var flash = n!==lastLog && lastLog!==-1;
+    lastLog=n;
+    render(flash);
+  });
+
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+
+  function fab(){
+    if(document.querySelector('.tv-fab')) return;
+    var b=document.createElement('button');
+    b.className='tv-fab';
+    b.innerHTML='📺 <span>Modo TV</span>';
+    b.onclick=open;
+    document.body.appendChild(b);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', fab);
+  else fab();
+})();
