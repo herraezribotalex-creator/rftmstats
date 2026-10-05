@@ -1196,6 +1196,29 @@ function lvDraftList(){
   return out.sort(function(a,b){ return b.ts-a.ts; });
 }
 
+/* ===== MODO TV · emisión en directo (admin) ===== */
+var TV_KEY='LIVE_TV';
+var tvTimer=null;
+function tvBroadcast(mid, st, ctx){
+  if(!isAdmin() || !adminPin()) return;
+  clearTimeout(tvTimer);
+  tvTimer=setTimeout(function(){
+    var payload={};
+    payload[TV_KEY]={mid:mid,p1:st.p1,p2:st.p2,log:st.log,starter:st.starter,cat:ctx.cat,round:ctx.round,tid:ctx.tid||null,tkey:ctx.tkey||null,retired:st.retired||null,ts:Date.now()};
+    window.__DB[TV_KEY]=payload[TV_KEY];
+    window.dispatchEvent(new Event('rftm:live-tv'));
+    window.__rpc('app_state_set',{p_pin:adminPin(),p_payload:payload,p_action:'live_tv'}).catch(function(){});
+  },600);
+}
+function tvClear(){
+  if(!isAdmin() || !adminPin()) return;
+  clearTimeout(tvTimer);
+  var payload={}; payload[TV_KEY]=null;
+  window.__DB[TV_KEY]=null;
+  window.dispatchEvent(new Event('rftm:live-tv'));
+  window.__rpc('app_state_set',{p_pin:adminPin(),p_payload:payload,p_action:'live_tv_clear'}).catch(function(){});
+}
+
 function buildLive(mid, ctx, defaults){
   var rec = TDB.scores[mid];
   var wrap = document.createElement('div');
