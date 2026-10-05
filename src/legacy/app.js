@@ -1196,6 +1196,29 @@ function lvDraftList(){
   return out.sort(function(a,b){ return b.ts-a.ts; });
 }
 
+/* ===== MODO TV · emisión en directo (admin) ===== */
+var TV_KEY='LIVE_TV';
+var tvTimer=null;
+function tvBroadcast(mid, st, ctx){
+  if(!isAdmin() || !adminPin()) return;
+  clearTimeout(tvTimer);
+  tvTimer=setTimeout(function(){
+    var payload={};
+    payload[TV_KEY]={mid:mid,p1:st.p1,p2:st.p2,log:st.log,starter:st.starter,cat:ctx.cat,round:ctx.round,tid:ctx.tid||null,tkey:ctx.tkey||null,retired:st.retired||null,ts:Date.now()};
+    window.__DB[TV_KEY]=payload[TV_KEY];
+    window.dispatchEvent(new Event('rftm:live-tv'));
+    window.__rpc('app_state_set',{p_pin:adminPin(),p_payload:payload,p_action:'live_tv'}).catch(function(){});
+  },600);
+}
+function tvClear(){
+  if(!isAdmin() || !adminPin()) return;
+  clearTimeout(tvTimer);
+  var payload={}; payload[TV_KEY]=null;
+  window.__DB[TV_KEY]=null;
+  window.dispatchEvent(new Event('rftm:live-tv'));
+  window.__rpc('app_state_set',{p_pin:adminPin(),p_payload:payload,p_action:'live_tv_clear'}).catch(function(){});
+}
+
 function buildLive(mid, ctx, defaults){
   var rec = TDB.scores[mid];
   var wrap = document.createElement('div');
@@ -1260,6 +1283,7 @@ function buildLive(mid, ctx, defaults){
   function renderLive(){
     var F = fmt();
     lvDraftSave(mid, st);
+    tvBroadcast(mid, st, ctx);
     var t = runMatch(st.log, F, st.starter);
     var n1=pName(st.p1), n2=pName(st.p2);
     var aceA=0, aceB=0;
@@ -1332,7 +1356,7 @@ function buildLive(mid, ctx, defaults){
       '<div class="lv-half">'+statPane(n1,t.stats.a,t.stats.b)+statPane(n2,t.stats.b,t.stats.a)+'</div>'+
       '<div class="lv-kick" style="margin-top:10px;text-align:center;line-height:1.6;">Guardar acumula estadísticas, anotadores (aces + winners) y actualiza H2H y rachas. Reiniciar borra también lo guardado de este partido.</div>';
 
-    wrap.querySelector('.lv-x').onclick=function(){ wrap.remove(); };
+    wrap.querySelector('.lv-x').onclick=function(){ tvClear(); wrap.remove(); };
     wrap.querySelectorAll('.lv-b').forEach(function(b){
       b.onclick=function(){ st.log.push(b.getAttribute('data-a')); renderLive(); };
     });
@@ -1358,6 +1382,7 @@ function buildLive(mid, ctx, defaults){
         else if(k==='reset'){
           st.log=[]; st.ano={a:0,b:0}; st.win={a:0,b:0}; st.retired=null;
           lvDraftClear(mid);
+          tvClear();
           if(TDB.scores[mid] && TDB.scores[mid].applied){
             if(!isAdmin()){ toast('Activa el modo administrador para borrar lo guardado', true); renderLive(); return; }
             revertRec(mid);
@@ -1395,6 +1420,7 @@ function buildLive(mid, ctx, defaults){
     addAno(rec2, st.p2, anoB);
     addSingle(mid, rec2);
     lvDraftClear(mid);
+    tvClear();
     saveTDB('match_score', {SINGLES:SG()}).then(function(){
       refreshAll();
       toast('Guardado · stats, anotadores, H2H y rachas actualizados');
@@ -6885,3 +6911,112 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
 
 })();
 
+
+/* ===== MODO TV · pantalla de estadio en directo ===== */
+(function(){
+  var ov=null, lastLog=-1;
+
+  function tvData(){
+    var v = window.__DB && window.__DB[TV_KEY];
+    return (v && v.p1 && v.p2) ? v : null;
+  }
+
+  function setCells(t, F, side){
+    if(F.mode==='games'){
+      return '<span class="tv-set'+(t.done&&t.winner===side?' won':'')+'">'+(side==='a'?t.gA:t.gB)+'</span>';
+    }
+    var out='';
+    for(var i=0;i<3;i++){
+      var pl=t.sets[i], cur=(!pl && i===t.sets.length && !t.done);
+      var v = pl ? (side==='a'?pl[0]:pl[1]) : (cur ? (side==='a'?t.gA:t.gB) : '·');
+      var won = pl ? ((side==='a'?pl[0]:pl[1]) > (side==='a'?pl[1]:pl[0])) : false;
+      out+='<span class="tv-set'+(cur?' cur':'')+(won?' won':'')+'">'+v+'</span>';
+    }
+    return out;
+  }
+
+  function row(t, F, d, side){
+    var pid = side==='a'?d.p1:d.p2;
+    var nm = pName(pid);
+    var serving = !t.done && t.server===side;
+    var isWin = t.done && t.winner===side;
+    var pts = t.done ? '—' : (side==='a'?t.ptA:t.ptB);
+    return '<div class="tv-row'+(isWin?' win':'')+'">'+
+      '<div class="tv-who">'+avaHtml(pid)+
+        '<div class="tv-nmwrap"><div class="tv-nm">'+esc(nm)+(isWin?' <span class="tv-crown">CAMPEÓN</span>':'')+'</div>'+
+        '<div class="tv-sub">'+(serving?'<span class="tv-ball"></span>Al saque':'Al resto')+'</div></div></div>'+
+      '<div class="tv-sets">'+setCells(t,F,side)+'</div>'+
+      '<div class="tv-pts'+(serving?' srv':'')+'">'+pts+'</div>'+
+    '</div>';
+  }
+
+  function render(flash){
+    if(!ov) return;
+    var d=tvData();
+    if(!d){
+      ov.innerHTML='<button class="tv-close" aria-label="Cerrar">×</button>'+
+        '<div class="tv-empty"><div class="tv-empty-ball">🎾</div>'+
+        '<div class="tv-empty-t">No hay partido en directo</div>'+
+        '<div class="tv-empty-s">Cuando el administrador empiece un partido, el marcador aparecerá aquí punto a punto.</div></div>';
+      bindClose();
+      return;
+    }
+    var F=fmtFor(d.cat, d.round);
+    var t=runMatch(d.log||[], F, d.starter||'a');
+    var state = t.done ? ('Final'+(d.retired?' · retirada':'')) : (t.tb?'Tie-break':'En juego');
+    ov.innerHTML=
+      '<button class="tv-close" aria-label="Cerrar">×</button>'+
+      '<div class="tv-card'+(flash?' tv-flash':'')+'">'+
+        '<div class="tv-top"><span class="tv-cat">'+esc(catLabel(d.cat))+' · '+esc(roundLabel(d.round))+'</span>'+
+          (t.done ? '<span class="tv-final">Finalizado</span>' : '<span class="tv-livebdg"><span class="tv-dot"></span>EN DIRECTO</span>')+'</div>'+
+        row(t,F,d,'a')+
+        '<div class="tv-div"></div>'+
+        row(t,F,d,'b')+
+        (t.bp && !t.done ? '<div class="tv-bp">⚠ Bola de break para '+esc(t.bpFor==='a'?pName(d.p1):pName(d.p2))+'</div>' : '')+
+        '<div class="tv-foot"><span>'+esc(F.label)+'</span><span>'+esc(state)+'</span></div>'+
+      '</div>';
+    bindClose();
+  }
+
+  function bindClose(){
+    var b=ov && ov.querySelector('.tv-close');
+    if(b) b.onclick=close;
+  }
+
+  function open(){
+    if(ov) return;
+    ov=document.createElement('div');
+    ov.className='tv-ov';
+    document.body.appendChild(ov);
+    window.__rftmTvOpen=true;
+    lastLog=-1;
+    render(false);
+  }
+  function close(){
+    if(!ov) return;
+    ov.remove(); ov=null;
+    window.__rftmTvOpen=false;
+  }
+
+  window.addEventListener('rftm:live-tv', function(){
+    if(!ov) return;
+    var d=tvData();
+    var n=(d && d.log) ? d.log.length : -1;
+    var flash = n!==lastLog && lastLog!==-1;
+    lastLog=n;
+    render(flash);
+  });
+
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+
+  function fab(){
+    if(document.querySelector('.tv-fab')) return;
+    var b=document.createElement('button');
+    b.className='tv-fab';
+    b.innerHTML='📺 <span>Modo TV</span>';
+    b.onclick=open;
+    document.body.appendChild(b);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', fab);
+  else fab();
+})();

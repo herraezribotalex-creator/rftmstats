@@ -17,6 +17,7 @@ declare global {
     __autoPoints: () => Record<string, number>;
     __rftmBooted?: boolean;
     __rftmLastSave?: number;
+    __rftmTvOpen?: boolean;
   }
 }
 
