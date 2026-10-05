@@ -83,7 +83,10 @@ function applyDerived() {
     const base = window.__DB[key] as Record<string, number> | undefined;
     if (!base) return;
     const auto = window.__autoPoints();
-    const eff: Record<string, number> = { ...base };
+    // Temporada Única = solo puntos automáticos; General = Base + automáticos.
+    const eff: Record<string, number> = {};
+    if (key === 'SEASON_POINTS') Object.assign(eff, base);
+    else Object.keys(base).forEach((k) => (eff[k] = 0));
     Object.keys(auto).forEach((k) => {
       eff[k] = (eff[k] || 0) + auto[k]!;
     });
