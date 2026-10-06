@@ -6909,9 +6909,6 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
     has: function(){ return true; }
   });
 
-})();
-
-
 /* ===== MODO TV · pantalla de estadio en directo ===== */
 (function(){
   var ov=null, lastLog=-1;
@@ -7019,4 +7016,6 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', fab);
   else fab();
+})();
+
 })();
