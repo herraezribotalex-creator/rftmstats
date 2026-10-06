@@ -1144,7 +1144,7 @@ button:active{transform:scale(.97);}
   display:inline-flex;align-items:center;gap:7px;
   font-size:12px;font-weight:900;letter-spacing:.16em;color:#ff5b5b;
 }
-.tv-dot{width:9px;height:9px;border-radius:50%;background:#ff5b5b;animation:tv pulse 1.2s infinite;}
+.tv-dot{width:9px;height:9px;border-radius:50%;background:#ff5b5b;animation:tvpulse 1.2s infinite;}
 @keyframes tvpulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.75);}}
 .tv-final{font-size:12px;font-weight:900;letter-spacing:.16em;color:var(--gold);}
 .tv-row{
