@@ -6915,6 +6915,7 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
 /* ===== MODO TV · pantalla de estadio en directo ===== */
 (function(){
   var ov=null, lastLog=-1;
+  function TV(){ return window.__tv; }
 
   function tvData(){
     var v = window.__DB && window.__DB['LIVE_TV'];
@@ -6937,13 +6938,13 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
 
   function row(t, F, d, side){
     var pid = side==='a'?d.p1:d.p2;
-    var nm = TV.pName(pid);
+    var nm = TV().pName(pid);
     var serving = !t.done && t.server===side;
     var isWin = t.done && t.winner===side;
     var pts = t.done ? '—' : (side==='a'?t.ptA:t.ptB);
     return '<div class="tv-row'+(isWin?' win':'')+'">'+
-      '<div class="tv-who">'+TV.avaHtml(pid)+
-        '<div class="tv-nmwrap"><div class="tv-nm">'+TV.esc(nm)+(isWin?' <span class="tv-crown">CAMPEÓN</span>':'')+'</div>'+
+      '<div class="tv-who">'+TV().avaHtml(pid)+
+        '<div class="tv-nmwrap"><div class="tv-nm">'+TV().esc(nm)+(isWin?' <span class="tv-crown">CAMPEÓN</span>':'')+'</div>'+
         '<div class="tv-sub">'+(serving?'<span class="tv-ball"></span>Al saque':'Al resto')+'</div></div></div>'+
       '<div class="tv-sets">'+setCells(t,F,side)+'</div>'+
       '<div class="tv-pts'+(serving?' srv':'')+'">'+pts+'</div>'+
@@ -6961,19 +6962,19 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
       bindClose();
       return;
     }
-    var TV=window.__tv; var F=TV.fmtFor(d.cat, d.round);
-    var t=TV.runMatch(d.log||[], F, d.starter||'a');
+    var F=TV().fmtFor(d.cat, d.round);
+    var t=TV().runMatch(d.log||[], F, d.starter||'a');
     var state = t.done ? ('Final'+(d.retired?' · retirada':'')) : (t.tb?'Tie-break':'En juego');
     ov.innerHTML=
       '<button class="tv-close" aria-label="Cerrar">×</button>'+
       '<div class="tv-card'+(flash?' tv-flash':'')+'">'+
-        '<div class="tv-top"><span class="tv-cat">'+TV.esc(TV.catLabel(d.cat))+' · '+TV.esc(TV.roundLabel(d.round))+'</span>'+
+        '<div class="tv-top"><span class="tv-cat">'+TV().esc(TV().catLabel(d.cat))+' · '+TV().esc(TV().roundLabel(d.round))+'</span>'+
           (t.done ? '<span class="tv-final">Finalizado</span>' : '<span class="tv-livebdg"><span class="tv-dot"></span>EN DIRECTO</span>')+'</div>'+
         row(t,F,d,'a')+
         '<div class="tv-div"></div>'+
         row(t,F,d,'b')+
-        (t.bp && !t.done ? '<div class="tv-bp">⚠ Bola de break para '+esc(t.bpFor==='a'?TV.pName(d.p1):TV.pName(d.p2))+'</div>' : '')+
-        '<div class="tv-foot"><span>'+TV.esc(F.label)+'</span><span>'+TV.esc(state)+'</span></div>'+
+        (t.bp && !t.done ? '<div class="tv-bp">⚠ Bola de break para '+esc(t.bpFor==='a'?TV().pName(d.p1):TV().pName(d.p2))+'</div>' : '')+
+        '<div class="tv-foot"><span>'+TV().esc(F.label)+'</span><span>'+TV().esc(state)+'</span></div>'+
       '</div>';
     bindClose();
   }
