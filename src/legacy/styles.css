@@ -1102,7 +1102,7 @@ button:active{transform:scale(.97);}
 
 /* ===== MODO TV · pantalla de estadio ===== */
 .tv-fab{
-  position:fixed;right:16px;bottom:16px;z-index:900;
+  position:fixed;left:16px;bottom:16px;z-index:900;
   display:flex;align-items:center;gap:8px;
   background:linear-gradient(135deg,var(--blue),#7a5cff);
   color:#fff;border:none;border-radius:12px;
