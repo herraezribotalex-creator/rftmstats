@@ -6917,7 +6917,7 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
   var ov=null, lastLog=-1;
 
   function tvData(){
-    var v = window.__DB && window.__DB[TV_KEY];
+    var v = window.__DB && window.__DB['LIVE_TV'];
     return (v && v.p1 && v.p2) ? v : null;
   }
 
