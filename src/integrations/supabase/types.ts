@@ -68,6 +68,54 @@ export type Database = {
         }
         Relationships: []
       }
+      pred_matches: {
+        Row: {
+          mid: string
+          p1: number | null
+          p2: number | null
+          resolved_at: string | null
+          winner: number | null
+        }
+        Insert: {
+          mid: string
+          p1?: number | null
+          p2?: number | null
+          resolved_at?: string | null
+          winner?: number | null
+        }
+        Update: {
+          mid?: string
+          p1?: number | null
+          p2?: number | null
+          resolved_at?: string | null
+          winner?: number | null
+        }
+        Relationships: []
+      }
+      pred_votes: {
+        Row: {
+          created_at: string
+          mid: string
+          nick: string
+          pick: number
+          voter: string
+        }
+        Insert: {
+          created_at?: string
+          mid: string
+          nick: string
+          pick: number
+          voter: string
+        }
+        Update: {
+          created_at?: string
+          mid?: string
+          nick?: string
+          pick?: number
+          voter?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -87,6 +135,29 @@ export type Database = {
       }
       app_state_set: {
         Args: { p_action?: string; p_payload: Json; p_pin: string }
+        Returns: boolean
+      }
+      pred_counts: {
+        Args: { p_mid: string }
+        Returns: {
+          n: number
+          pick: number
+        }[]
+      }
+      pred_leaderboard: {
+        Args: never
+        Returns: {
+          hits: number
+          nick: string
+          total: number
+        }[]
+      }
+      pred_resolve: {
+        Args: { p_mid: string; p_pin: string; p_winner: number }
+        Returns: boolean
+      }
+      pred_vote: {
+        Args: { p_mid: string; p_nick: string; p_pick: number; p_voter: string }
         Returns: boolean
       }
     }
