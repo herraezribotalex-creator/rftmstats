@@ -4142,6 +4142,9 @@ document.addEventListener('app:ready', function(){ setTimeout(boot,0); });
     open: goToTournament
   };
 
+  /* puente para el Modo TV (vive en otro cierre) */
+  window.__tv = { fmtFor:fmtFor, runMatch:runMatch, pName:pName, esc:esc, avaHtml:avaHtml, catLabel:catLabel, roundLabel:roundLabel };
+
 })();
 
 })();
