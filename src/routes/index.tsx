@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import legacyCss from "@/legacy/styles.css?raw";
 import legacyHtml from "@/legacy/markup.html?raw";
 import legacyJs from "@/legacy/app.js?raw";
+import proJs from "@/legacy/pro.js?raw";
 import { bootLegacyApp, loadState } from "@/legacy/boot";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -42,7 +43,7 @@ function LigaApp() {
       try {
         await loadState();
         if (cancelled || !hostRef.current) return;
-        bootLegacyApp(hostRef.current, legacyCss, legacyHtml, legacyJs);
+        bootLegacyApp(hostRef.current, legacyCss, legacyHtml, legacyJs + "\n;\n" + proJs);
         setStatus("ready");
       } catch (err) {
         console.error(err);
