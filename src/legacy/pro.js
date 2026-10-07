@@ -67,6 +67,7 @@
     var R=elo(), T=window.__TDB||{tournaments:[]}, html='';
     var act=(T.tournaments||[]).filter(function(t){ return t.status!=='hist' && !(t.f&&t.f.w) && bracketOf(t).length && !(t.qf||[]).some(function(m){return m&&m.p1b;}); });
     var blocks=act.map(function(t){ return {title:t.name+' · probabilidad de título', res:simulate(bracketOf(t),R,4000)}; });
+    blocks=blocks.filter(function(b){ return b.res.length; });
     if(!blocks.length){
       var top=players().slice().sort(function(a,b){ return (R[b.id]||0)-(R[a.id]||0); }).slice(0,8).map(function(p){return p.id;});
       if(top.length===8){
