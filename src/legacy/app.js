@@ -1421,6 +1421,7 @@ function buildLive(mid, ctx, defaults){
     addSingle(mid, rec2);
     lvDraftClear(mid);
     tvClear();
+    if(rec2.winner) window.__rpc('pred_resolve',{p_pin:adminPin(),p_mid:mid,p_winner:rec2.winner}).catch(function(){});
     saveTDB('match_score', {SINGLES:SG()}).then(function(){
       refreshAll();
       toast('Guardado · stats, anotadores, H2H y rachas actualizados');
@@ -6977,6 +6978,7 @@ function anoOf(st, side){ return Math.max(0,(st.ano&&st.ano[side]||0)); }
         '<div class="tv-foot"><span>'+TV().esc(F.label)+'</span><span>'+TV().esc(state)+'</span></div>'+
       '</div>';
     bindClose();
+    try{ if(window.__proTv) window.__proTv(ov, d, t); }catch(e){}
   }
 
   function bindClose(){
